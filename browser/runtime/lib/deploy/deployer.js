@@ -227,6 +227,7 @@ Deployer.prototype.attach = function(name, tag, selector, executable) {
 
 Deployer.prototype.execute = function(name, tag, selector) {
     var component = Component.executeComponent(name, tag, selector);
+    window.comp = component;
     DataStore.saveExecutedComponent(selector, component);
 };
 

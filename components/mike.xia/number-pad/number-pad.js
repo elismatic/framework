@@ -1,6 +1,6 @@
 BEST.scene('mike.xia:number-pad', 'HEAD', {
     behaviors: {
-        '#item': {
+        '.item': {
             'size': [50, 50],
             'origin': [0.5, 0.5],
             'align': [0.5, 0.5],
@@ -43,10 +43,19 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
     events: {
         $public : {
             'keys': 'setter',
-            'position': 'setter'
+            'position': 'setter',
+            'set-radius' : function($state, $payload) {
+                var radius = $state.get('radius');
+                for (var i = 0; i < radius.length; i++) {
+                    radius[i] = $payload
+                };
+                $state.set('radius', radius, {duration: 500});
+            }
         },
-        '#item': {
+        '.item': {
             'click': function($dispatcher, $state, $payload) {
+                $dispatcher.emit('number-pad-click');
+
                 var endRadius;
                 var transition;
                 var delay;
@@ -70,6 +79,9 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
                         .thenSet(['radius', i], endRadius, transition);
                 }
                 
+            },
+            'mouseover': function() {
+                console.log('mousing over')
             }
         }
     },

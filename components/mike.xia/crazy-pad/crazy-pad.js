@@ -132,7 +132,7 @@ var emojis = [
 
 BEST.module('mike.xia:crazy-pad', 'HEAD', {
     behaviors: {
-        '#number-pad' : {
+        '.number-pad' : {
             '$repeat' : function(padCount) {
                 var pads = [];
                 for(var i=0; i<padCount; i++) {
@@ -155,9 +155,13 @@ BEST.module('mike.xia:crazy-pad', 'HEAD', {
         }
     },
     events: {
-        '#number-pad' : {
-            'click' : function($state) {
-                console.log('click' + $state.get('$index'));
+        '.number-pad' : {
+            // 'mouseover' : function($state) {
+            //     console.log('mouseover');
+            //     // console.log('click' + $state.get('$index'));
+            // }
+            'number-pad-click': function() {
+                console.log('hell')
             }
         }
     },
