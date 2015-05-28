@@ -23,24 +23,28 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
                 }
                 return buttons;
             },
-            'position': function ($index, radius) {
+            'position': function ($index, radius, position) {
                 if($index >= 10) {
                     var step = 2*Math.PI / 3;
                     return [
-                        radius[$index]/3 * Math.sin($index * step),
-                        radius[$index]/3 * Math.cos($index * step)
+                        radius[$index]/3 * Math.sin($index * step) + position[0],
+                        radius[$index]/3 * Math.cos($index * step) + position[1]
                     ]
                 }else{
                     var step = 2*Math.PI / 10;
                     return [
-                        radius[$index] * Math.sin($index * step),
-                        radius[$index] * Math.cos($index * step)
+                        radius[$index] * Math.sin($index * step) + position[0],
+                        radius[$index] * Math.cos($index * step) + position[1]
                     ];
                 }
             }
         }
     },
     events: {
+        $public : {
+            'keys': 'setter',
+            'position': 'setter'
+        },
         '#item': {
             'click': function($dispatcher, $state, $payload) {
                 var endRadius;
@@ -70,6 +74,7 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
         }
     },
     states: {
+        position : [0, 0],
         digits: 10,
         keys : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '#', '*', 'X'],
         radius : [17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17],
