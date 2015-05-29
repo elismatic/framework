@@ -1,7 +1,6 @@
 'use strict';
 
-var Async = require('async');
-var Es = require('./../../../es');
+var Es = require('./../es');
 var Lodash = require('lodash');
 
 /**

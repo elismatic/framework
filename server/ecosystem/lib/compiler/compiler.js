@@ -1,8 +1,7 @@
 'use strict';
 
 var Async = require('async');
-var Colors = require('colors/safe');
-var Es = require('./../../../es');
+var Es = require('./../es');
 var Jsdom = require('jsdom');
 var Lodash = require('lodash');
 var Path = require('path');
@@ -14,7 +13,6 @@ var Helper = require('./../helper/helper');
 var BLANK = '';
 var PIPE = '|';
 var QUOTE = '\'';
-var SLASH = '/';
 var BEHAVIORS_KEY = 'behaviors';
 var EVENTS_KEY = 'events';
 var PASS_THROUGH_KEY = '$pass-through';
@@ -308,6 +306,9 @@ Compiler.prototype.findLibraryInvocations = function(fullAST, cb) {
 // AST{Object} -> Object
 Compiler.prototype.findModuleDefinitionASTs = function(fullAST, cb) {
     this.findLibraryInvocations(fullAST, function(err, libraryInvocations) {
+        if (err) {
+            throw (err);
+        }
         var moduleDefinitions = {};
         for (var moduleName in libraryInvocations) {
             var libraryInvocation = libraryInvocations[moduleName];
@@ -324,6 +325,9 @@ Compiler.prototype.findModuleDefinitionASTs = function(fullAST, cb) {
 // String, AST{Object} -> String
 Compiler.prototype.findModuleTag = function(name, fullAST, cb) {
     this.findLibraryInvocations(fullAST, function(err, libraryInvocations) {
+        if (err) {
+            throw (err);
+        }
         var moduleTag;
         for (var moduleName in libraryInvocations) {
             // Only assume the main module has the correct tag.
@@ -406,14 +410,13 @@ Compiler.prototype.findDependencyKeys = function(objectAST, dependenciesList) {
             });
         }
     });
-}
+};
 
 // AST{Object}, AST{Config} -> Object
 Compiler.prototype.buildDependencyTable = function(definitionAST, configAST, cb) {
     // Step 1: Collect dependencies from the definition objects.
     var dependenciesList = [];
     var treeFacetKeyName = this.options.treeFacetKeyName;
-    var dependen
     var treeValue;
     Es.eachObjectProperty(definitionAST, function(keyName, _1, actualValue, valueObject) {
         if (keyName === treeFacetKeyName) {
@@ -453,19 +456,29 @@ Compiler.prototype.buildDependencyTable = function(definitionAST, configAST, cb)
 
     // Step 5: Return the accumulated result
     cb(null, dependencyTable);
-}
+};
 
 // AST{Object} -> *AST{Object}
 Compiler.prototype.interpolateAST = function(name, tag, definitionAST, cb) {
+    var fullPath;
     Es.eachStringLiteral(definitionAST, function(stringValue, node, parent) {
-        var matches = 0;
-        this.helper.eachAssetMatch(stringValue, function(match, replaced) {
-            var fullPath = this.helper.getFullAssetPath(name, tag, replaced);
-            stringValue = stringValue.split(match).join(fullPath);
-            matches++;
-        }.bind(this));
-        if (matches > 0) {
-            node.value = stringValue;
+        var moduleCDNMatch = this.helper.getModuleCDNMatch(stringValue);
+        if (moduleCDNMatch) {
+            var moduleName = moduleCDNMatch.value.split(PIPE)[1] || name;
+            fullPath = this.helper.getFullAssetPath(moduleName, tag, '');
+            node.value = stringValue.split(moduleCDNMatch.match).join(fullPath);
+        }
+        else {
+            var matches = 0;
+            this.helper.eachAssetMatch(stringValue, function(match, replaced) {
+                fullPath = this.helper.getFullAssetPath(name, tag, replaced);
+                stringValue = stringValue.split(match).join(fullPath);
+                matches++;
+            }.bind(this));
+
+            if (matches > 0) {
+                node.value = stringValue;
+            }
         }
     }.bind(this));
     cb(null);
@@ -546,7 +559,7 @@ Compiler.prototype.expandBehaviorsObject = function(behaviorsAST) {
             }
         });
     });
-}
+};
 
 function eventFnStringTemplate(stateName) {
     return '(function($state,$payload){$state.set(\'' + stateName + '\',$payload);})';

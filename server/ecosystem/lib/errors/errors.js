@@ -17,9 +17,9 @@ function warning(message) {
     console.warn(Colors.yellow.underline(PREFIX + message));
 }
 
-function warn(message) {
-    console.warn(Colors.yellow(PREFIX + message));
-}
+//function warn(message) {
+//    console.warn(Colors.yellow(PREFIX + message));
+//}
 
 function note(message) {
     console.error(Colors.red(PREFIX + message));
@@ -77,8 +77,12 @@ var handlers = {
         finalize(err, step, fin);
     },
     'no-compiler-found': function(err, info, step, fin, ok) {
-        warning('No compiler found for format `' + info.extname + '`');
-        warn(err);
+        if (err) {
+            console.warn(err);
+        }
+        var message = 'No compiler found for file extname `' + info.extname + '`. ';
+        message += 'Leaving the file `' + info.path + '` untouched.';
+        console.warn(message);
         ok();
     },
     'no-module-tag-found': function(err, info, step, fin, ok) {
@@ -117,6 +121,7 @@ var handlers = {
     },
     'no-asset-host-specified': function(err, info, step, fin, ok) {
         warning('No asset host has been specified!');
+        note(err);
         if (ok) ok();
     }
 };

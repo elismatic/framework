@@ -5,7 +5,6 @@ var Lodash = require('lodash');
 var Path = require('path');
 
 var BLANK = '';
-var PROTOCOL_DELIMITER = '://';
 var SLASH = '/';
 var PIPE = '|';
 var STRING = 'string';
@@ -75,11 +74,12 @@ Helper.DEFAULTS = {
     },
     dependencyBlacklist: { 'localhost': true },
     dependencyRegexp: /([\w-_.]+:)+(([\w-_.]+(?=[\s|>|\/]))|([\w-_.]+(?=:)))/ig,
+    moduleCDNRegexp: /\@\{CDN_PATH(\|)?(([a-zA-Z0-9\:\.-])?)+\}/ig,
     region: 'us-west-2',
     storageHost: (Env.kind === Env.PRODUCTION)
         ? 'https://s3-us-west-2.amazonaws.com'
         : 'http://localhost:' + Env.PORT,
-    versionsFolder: '~versions',
+    versionsFolder: '~versions'
 };
 
 Helper.prototype.getDependencyModuleName = function(str) {
@@ -138,12 +138,26 @@ Helper.prototype.eachAssetMatch = function(string, iterator) {
                  .replace(PIPE, SLASH);
         iterator(match, str);
     }
-}
+};
 
 // String -> String
 Helper.prototype.getEntrypointBasename = function(moduleName) {
     var moduleNameParts = this.getModuleNameParts(moduleName);
     return moduleNameParts[moduleNameParts.length - 1];
+};
+
+Helper.prototype.getModuleCDNMatch = function(string) {
+    var matches = string.match(this.options.moduleCDNRegexp);
+    if (matches) {
+        return {
+            match: matches,
+            value: matches[0].replace(this.options.assetPrefixRegexp, BLANK)
+                             .replace(this.options.assetSuffixRegexp, BLANK)
+        };
+    }
+    else {
+        return null;
+    }
 };
 
 Helper.prototype.getModuleNameParts = function(moduleName) {

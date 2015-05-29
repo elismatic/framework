@@ -6,7 +6,6 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
             'align': [0.5, 0.5],
             'mount-point': [0.5, 0.5],
             'style': {
-                // background: 'rgba(50, 50, 50, 1)',
                 color : 'rgba(255, 255, 255, 0.8)',
                 fontSize : '25px',
                 fontFamily : 'sans-serif',
@@ -23,18 +22,18 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
                 }
                 return buttons;
             },
-            'position': function ($index, radius, position) {
+            'position': function ($index, radius) {
                 if($index >= 10) {
                     var step = 2*Math.PI / 3;
                     return [
-                        radius[$index]/3 * Math.sin($index * step) + position[0],
-                        radius[$index]/3 * Math.cos($index * step) + position[1]
+                        radius[$index]/3 * Math.sin($index * step),
+                        radius[$index]/3 * Math.cos($index * step)
                     ]
                 }else{
                     var step = 2*Math.PI / 10;
                     return [
-                        radius[$index] * Math.sin($index * step) + position[0],
-                        radius[$index] * Math.cos($index * step) + position[1]
+                        radius[$index] * Math.sin($index * step),
+                        radius[$index] * Math.cos($index * step)
                     ];
                 }
             }
@@ -43,7 +42,6 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
     events: {
         $public : {
             'keys': 'setter',
-            'position': 'setter',
             'set-radius' : function($state, $payload) {
                 var radius = $state.get('radius');
                 for (var i = 0; i < radius.length; i++) {
@@ -62,9 +60,9 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
 
                 if($state.get('open')) {
                     $state.set('open', false);
-                    endRadius = 15;
+                    endRadius = 20;
                     delay = 0;
-                    transition = { duration : 800, curve : 'outExpo' };
+                    transition = { duration : 1200, curve : 'outExpo' };
                 }else {
                     $state.set('open', true);
                     delay = 30;
@@ -79,17 +77,16 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
                         .thenSet(['radius', i], endRadius, transition);
                 }
                 
-            },
-            'mouseover': function() {
-                console.log('mousing over')
             }
+        },
+        '$pass-through' : {
+            '#container': ['position']
         }
     },
     states: {
-        position : [0, 0],
         digits: 10,
         keys : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, '#', '*', 'X'],
-        radius : [17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17],
+        radius : [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
         open : false,
         rotationX : 0, 
         rotationY : 0
