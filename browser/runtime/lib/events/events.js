@@ -16,6 +16,8 @@ var PASS_THROUGH_KEY = '$pass-through';
 var DESCENDANT_KEY = 'descendant';
 var MISS_KEY = '$miss';
 var ANY_KEY = '$any';
+var INDEX_KEY = '$index';
+var REPEAT_PAYLOAD_KEY = '$repeatPayload';
 
 function Events(eventGroups, name, dependencies, rootNode) {
     EventHandler.apply(this);
@@ -28,20 +30,35 @@ function Events(eventGroups, name, dependencies, rootNode) {
 Events.prototype = Object.create(EventHandler.prototype);
 Events.prototype.constructor = Events;
 
-Events.prototype.initializeDescendantEvents = function initializeDescendantEvents(targetRoot, uid) {
+Events.prototype.initializeDescendantEvents = function initializeDescendantEvents(expandedBlueprint, uid, uidWhiteList) {
     var events;
     var event;
     var selector;
     var eventName;
+    var targets;
     for (selector in this.eventStore[DESCENDANT_KEY]) {
         events = this.eventStore[DESCENDANT_KEY][selector];
+        targets = VirtualDOM.query(expandedBlueprint, selector);
+
+        // If white list is included, only attach events to nodes corresponding to UIDs in
+        // that white list (i.e., dynamically added nodes).
+        if (uidWhiteList) {
+            var whiteListTargets = [];
+            for (var i = 0; i < targets.length; i++) {
+                if (uidWhiteList.indexOf(VirtualDOM.getUID(targets[i])) !== -1) {
+                    whiteListTargets.push(targets[i]);
+                }
+            }
+            targets = whiteListTargets;
+        }
+
         for (eventName in events) {
             event = events[eventName];
             if (eventName.indexOf(COMPONENT_DELIM) >= 0) {
-                this.setupProxyEvent(event, targetRoot, uid);
+                this.setupProxyEvent(event, targets, uid);
             }
             else {
-                this.setupDispatchedEvent(event, targetRoot, uid);
+                this.setupDispatchedEvent(event, targets, uid);
             }
         }
     }
@@ -53,26 +70,44 @@ events:
     '#surface'
         'famous:events:click' ()=>
  */
-Events.prototype.setupProxyEvent = function setupProxyEvent(event, targetRoot, uid) {
+Events.prototype.setupProxyEvent = function setupProxyEvent(event, targets, uid) {
     var trigger = Events.getDirectEventAction(event.name, this.dependencies);
     var triggerParams = Utilities.getParameterNames(trigger);
     var lastDelimIdx = event.name.lastIndexOf(COMPONENT_DELIM);
     var eventName = event.name.slice(lastDelimIdx + 1); // 'famous:events:click' -> 'click'
-
     var payload = {
         eventName: eventName
     };
-
-    var targets = VirtualDOM.query(targetRoot, event.selector);
     var targetUID;
     var triggerArgs;
-    for (var i = targets.length - 1; i >= 0; i--) {
+    var listenerArgs;
+    var component;
+    var $indexIndex;
+    var $repeatPayloadIndex;
+    for (var i = 0; i < targets.length; i++) {
         targetUID = VirtualDOM.getUID(targets[i]);
 
-        payload.listener = function(eventPayload) {
-            var listenerArgs = Injector.getArgs(event.params, eventPayload, uid);
-            event.action.apply(null, listenerArgs);
-        };
+        // If $index is injected into an event handler, the value of $index should
+        // correspond to the $index associated with the item that is capturing the event.
+        // For example, if items are repeated, the $index value on a click handler should be
+        // the index of the repeated item, not the parent component.
+        $indexIndex = event.params.indexOf(INDEX_KEY);
+        $repeatPayloadIndex = event.params.indexOf(REPEAT_PAYLOAD_KEY);
+        if ($indexIndex !== -1 || $repeatPayloadIndex !== -1) {
+            component = Utilities.getComponent(targets[i]);
+            payload.listener = function(component, eventPayload) {
+                listenerArgs = Injector.getArgs(event.params, eventPayload, uid);
+                listenerArgs[$indexIndex] = component.states.get(INDEX_KEY);
+                listenerArgs[$repeatPayloadIndex] = component.states.get(REPEAT_PAYLOAD_KEY);
+                event.action.apply(null, listenerArgs);
+            }.bind(null, component);
+        }
+        else {
+            payload.listener = function(eventPayload) {
+                listenerArgs = Injector.getArgs(event.params, eventPayload, uid);
+                event.action.apply(null, listenerArgs);
+            };
+        }
 
         triggerArgs = Injector.getArgs(triggerParams, payload, targetUID);
         trigger.apply(null, triggerArgs);
@@ -85,102 +120,14 @@ events:
     '#surface'
         'custom-event' ()=>
  */
-Events.prototype.setupDispatchedEvent = function setupDispatchedEvent(event, targetRoot, uid) {
+Events.prototype.setupDispatchedEvent = function setupDispatchedEvent(event, targets, uid) {
     var self = this;
-    var targets = VirtualDOM.query(targetRoot, event.selector);
     var component;
     for (var i = 0; i < targets.length; i++) {
         component = DataStore.getComponent(VirtualDOM.getUID(targets[i]));
         component.events.dispatcher.on(event.name, function(message) {
             self.sendDescendantMessage(event.name, message, event.selector, uid);
         });
-    }
-};
-
-Events.prototype.sendMessage = function sendMessage(key, value, uid) {
-    var publicEvents = this.eventStore[PUBLIC_KEY];
-    var eventsToFire = [];
-    if (publicEvents[ANY_KEY]) {
-        eventsToFire.push(publicEvents[key]);
-    }
-    if (publicEvents[key]) {
-        eventsToFire.push(publicEvents[key]);
-    }
-    else {
-        if (publicEvents[MISS_KEY]) {
-            eventsToFire.push(publicEvents[MISS_KEY]);
-        }
-    }
-
-    if (eventsToFire.length < 1) {
-        Logger.log('Unknown public event `' + key + '` for `' + this.name + '`', 1);
-    }
-
-    var event;
-    var args;
-    for (var i = 0; i < eventsToFire.length; i++) {
-        event = eventsToFire[i];
-        args = Injector.getArgs(event.params, value, uid);
-        event.action.apply(null, args);
-    }
-};
-
-Events.prototype.sendMessages = function sendMessages(messages, uid) {
-    for (var key in messages) {
-        this.sendMessage(key, messages[key], uid);
-    }
-};
-
-Events.sendMessageBySelector = function sendMessageBySelector(key, value, targetDOM, selector) {
-    var targets = VirtualDOM.query(targetDOM, selector);
-    var component;
-    for (var i = 0; i < targets.length; i++) {
-        component = DataStore.getComponent(VirtualDOM.getUID(targets[i]));
-        component.sendMessage(key, value);
-    }
-};
-
-/*
-events
-    $pass-through
-        selector: *
-        (Every public message gets passed along to selected elements)
-
-        selector: ['position', 'opacity']
-        (Whitelist of public messages get passed along to selected elements)
-
-        selector: {
-            child-position: position,
-            child-opacity: opacity
-        }
-        (Whitelist of public messages get passed along where key is public event &
-        value is the public message that gets sent to )
- */
-Events.prototype.processPassThroughEvents = function processPassThroughEvents(messageKey, messagePayload, targetDOM) {
-    var passThroughEvents = this.eventStore[PASS_THROUGH_KEY];
-    var selector;
-    var event;
-    var value;
-    for (selector in passThroughEvents) {
-        event = passThroughEvents[selector];
-        selector = event.name;
-        value = event.action;
-        if (typeof value === 'string') {
-            Events.sendMessageBySelector(messageKey, messagePayload, targetDOM, selector);
-        }
-        else if (Array.isArray(value)) {
-            if (value.indexOf(messageKey) > -1) {
-                Events.sendMessageBySelector(messageKey, messagePayload, targetDOM, selector);
-            }
-        }
-        else if (typeof value === 'object') {
-            if (messageKey in value) {
-                Events.sendMessageBySelector(value[messageKey], messagePayload, targetDOM, selector);
-            }
-        }
-        else {
-            throw new Error('`' + value + '` is not a valid value for a $pass-through event');
-        }
     }
 };
 
@@ -265,13 +212,105 @@ Events.prototype._executeEvent = function _executeEvent(event, payload, uid) {
     event.action.apply(null, args);
 };
 
-Events.prototype.triggerPublicEvent = function triggerPublicEvent(eventName, payload, uid) {
-    var event = this.eventStore[PUBLIC_KEY][eventName];
-    if (!event) {
-        throw new Error('Unknown public event `' + eventName + '` for `' + this.name + '`');
+/*
+events
+    $pass-through
+        selector: *
+        (Every public message gets passed along to selected elements)
+
+        selector: ['position', 'opacity']
+        (Whitelist of public messages get passed along to selected elements)
+
+        selector: {
+            child-position: position,
+            child-opacity: opacity
+        }
+        (Whitelist of public messages get passed along where key is public event &
+        value is the public message that gets sent to )
+ */
+Events.prototype._processPassThroughEvents = function _processPassThroughEvents(messageKey, messagePayload, uid) {
+    var passThroughEvents = this.eventStore[PASS_THROUGH_KEY];
+    var eventPassedThrough = false;
+    var selector;
+    var event;
+    var value;
+    for (selector in passThroughEvents) {
+        event = passThroughEvents[selector];
+        selector = event.name;
+        value = event.action;
+        if (value === '*') {
+            Events.sendMessageBySelector(messageKey, messagePayload, uid, selector);
+            eventPassedThrough = true;
+        }
+        else if (Array.isArray(value)) {
+            if (value.indexOf(messageKey) > -1) {
+                Events.sendMessageBySelector(messageKey, messagePayload, uid, selector);
+                eventPassedThrough = true;
+            }
+        }
+        else if (typeof value === 'object') {
+            if (messageKey in value) {
+                Events.sendMessageBySelector(value[messageKey], messagePayload, uid, selector);
+                eventPassedThrough = true;
+            }
+        }
+        else {
+            throw new Error('`' + value + '` is not a valid value for a $pass-through event');
+        }
     }
 
-    this._executeEvent(event, payload, uid);
+    return eventPassedThrough;
+};
+
+Events.prototype.sendMessage = function sendMessage(key, payload, uid) {
+    // Check public events
+    var publicEvents = this.eventStore[PUBLIC_KEY];
+    var eventsToFire = [];
+    if (publicEvents[ANY_KEY]) {
+        eventsToFire.push(publicEvents[key]);
+    }
+    if (publicEvents[key]) {
+        eventsToFire.push(publicEvents[key]);
+    }
+    else {
+        if (publicEvents[MISS_KEY]) {
+            eventsToFire.push(publicEvents[MISS_KEY]);
+        }
+    }
+
+    // Check pass through events
+    var messagePassedThrough = this._processPassThroughEvents(key, payload, uid);
+
+    //  Trigger events
+    if (eventsToFire.length < 1) {
+        if (!messagePassedThrough) {
+            Logger.log('Unknown public/passthrough event `' + key + '` for `' + this.name + '`', 1);
+        }
+    }
+    else {
+        var event;
+        var args;
+        for (var i = 0; i < eventsToFire.length; i++) {
+            event = eventsToFire[i];
+            this._executeEvent(event, payload, uid);
+        }
+    }
+};
+
+Events.prototype.sendMessages = function sendMessages(messages, uid) {
+    for (var key in messages) {
+        this.sendMessage(key, messages[key], uid);
+    }
+};
+
+Events.sendMessageBySelector = function sendMessageBySelector(key, value, uid, selector) {
+    var parentComponent = DataStore.getComponent(uid);
+    var targets = VirtualDOM.query(parentComponent.tree.getExpandedBlueprint(), selector);
+    var component;
+    for (var i = 0; i < targets.length; i++) {
+        component = DataStore.getComponent(VirtualDOM.getUID(targets[i]));
+        component.sendMessage(key, value);
+    }
 };
 
 Events.processEventGroups = function processEventGroups(groups) {

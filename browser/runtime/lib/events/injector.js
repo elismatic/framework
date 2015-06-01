@@ -13,6 +13,8 @@ var BEST_DOM_NODE_KEY = '$domNode';
 var DISPATCHER_KEY = '$dispatcher';
 var DOM_ELEMENT_KEY = '$DOMElement';
 var MUSTACHE_KEY = '$mustache';
+var INDEX_KEY = '$index';
+var REPEAT_PAYLOAD_KEY = '$repeatPayload';
 
 function getArgs(paramNames, payload, uid) {
     var component = DataStore.getComponent(uid);
@@ -27,6 +29,8 @@ function getArgs(paramNames, payload, uid) {
             case STATE_MANAGER_KEY: args.push(component.states.getStateManager()); break;
             case TIMELINES_KEY: args.push(component.timelines); break;
             case DISPATCHER_KEY: args.push(component.events.dispatcher); break;
+            case INDEX_KEY: args.push(component.states.get(INDEX_KEY)); break;
+            case REPEAT_PAYLOAD_KEY: args.push(component.states.get(REPEAT_PAYLOAD_KEY)); break;
             case DOM_ELEMENT_KEY: args.push(FamousConnector.decorateComponent(component, 'DOMElement')); break;
             default:
                 throw new Error('No such object `' + paramNames[i] + '`');
