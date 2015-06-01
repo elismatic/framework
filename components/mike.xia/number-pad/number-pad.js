@@ -79,6 +79,10 @@ BEST.scene('mike.xia:number-pad', 'HEAD', {
                 
             }
         },
+
+        // if a public event position comes in, number-pad passes
+        //it down to view, (or any module) and lets it handle the 
+        //data from the message.  
         '$pass-through' : {
             '#container': ['position']
         }
