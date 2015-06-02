@@ -3,6 +3,10 @@
     "browser": true,
     "node": true
   },
+  "globals": {
+    "BEST": true,
+    "QUERY": true
+  },
   "rules": {
     // Possible Errors
     "comma-dangle": 1,
