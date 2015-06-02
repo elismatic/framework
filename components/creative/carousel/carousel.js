@@ -1,8 +1,20 @@
 var layouts = [
     [{size:3,startPos:[0,0]},{size:2,startPos:[3,0]},{size:1,startPos:[3,2]},{size:1,startPos:[0,3]},{size:1,startPos:[1,3]},{size:1,startPos:[2,3]},{size:2,startPos:[3,3]}],
-    // [{size:3,startPos:[0,0]},{size:2,startPos:[3,1]},{size:1,startPos:[3,0]},{size:1,startPos:[0,3]},{size:1,startPos:[3,3]},{size:1,startPos:[3,4]},{size:2,startPos:[1,3]}],
-    // [{size:3,startPos:[2,0]},{size:2,startPos:[0,1]},{size:1,startPos:[0,3]},{size:1,startPos:[0,4]},{size:1,startPos:[3,3]},{size:1,startPos:[4,3]},{size:2,startPos:[1,3]}]
+    [{size:3,startPos:[0,0]},{size:2,startPos:[3,1]},{size:1,startPos:[3,0]},{size:1,startPos:[0,3]},{size:1,startPos:[3,3]},{size:1,startPos:[3,4]},{size:2,startPos:[1,3]}],
+    [{size:3,startPos:[2,0]},{size:2,startPos:[0,1]},{size:1,startPos:[0,3]},{size:1,startPos:[0,4]},{size:1,startPos:[3,3]},{size:1,startPos:[4,3]},{size:2,startPos:[1,3]}]
 ];
+
+var offsets = [];
+
+for(var i = 0; i < layouts.length; i++) {
+    for(var k = 0; k < layouts[i].length; k++) {
+        offsets.push(-1500 * i)
+    }
+}
+
+function clamp(value, lower, upper) {
+    return value < lower ? lower : value > upper ? upper : value;
+}
 
 BEST.module('creative:carousel', 'HEAD', {
     behaviors: {
@@ -30,25 +42,52 @@ BEST.module('creative:carousel', 'HEAD', {
                 }
             },
             position : function($index, offsets) {
-                return [offsets[$index], 0];
+                return [0, 0, offsets[$index]];
+            },
+            opacity: function($index, offsets, depthDistance) {
+                let opacity,
+                    offset = offsets[$index];
+
+                if(offset >= 0) {
+                    opacity = clamp(1 - offset / 750, 0, 1);
+                }
+                else {
+                    opacity = clamp(1 - offset / (-depthDistance * 2), 0, 1);
+                }
+
+                return opacity;
             }
         },
     },
     events: {
+        '$lifecycle': {
+            'post-load': function($state) {
+                console.log('done loading');
+            }
+        },
+
         '#app': {
             'click': function($state) {
+                // $state.set('zPos', $state.get('zPos') + 1);
+
                 var offsets = $state.get('offsets');
-                for(var i=0; i<offsets.length; i++) {
+                    // zPos = $state.get('zPos');
+
+                for(var i = 0; i < offsets.length; i++) {
                     var oldVal = offsets[i];
+
                     $state
-                        .set(['offsets', i], oldVal, { duration : i * 50 })
-                        .thenSet(['offsets', i], oldVal + 300, { duration : 800, curve : 'outBack' });
+                        // .chain(['offsets', i])
+                        // .set(['offsets', i], oldVal, { duration : i * 50 })
+                        .set(['offsets', i], (oldVal + 1500), { duration : 800, curve : 'outBack' })
+                        .thenSet(['offsets', i], oldVal > -100 ? oldVal - 3000 : oldVal + 1500);
                 }
             }
         }
     },
     states: {
-        offsets: [0, 0, 0, 0, 0, 0, 0],
+        offsets: offsets,
+        // zPos: 0,
         unusedArr : [0, 0, 0, 0, 0, 0, 0],
         layouts: layouts,
         gridSize: [5, 5],
