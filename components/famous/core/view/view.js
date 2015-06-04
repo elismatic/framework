@@ -29,6 +29,10 @@ BEST.module('famous:core:view', 'HEAD', {
             'famous:core:components:scale-y': '[[identity|scaleY]]',
             'famous:core:components:scale-z': '[[identity|scaleZ]]',
 
+            'famous:core:components:size-true': '[[identity|sizeTrue]]',
+            'famous:core:components:size-true-x': '[[identity|sizeTrueX]]',
+            'famous:core:components:size-true-y': '[[identity|sizeTrueY]]',
+
             'famous:core:components:size-absolute': '[[identity|sizeAbsolute]]',
             'famous:core:components:size-absolute-x': '[[identity|sizeAbsoluteX]]',
             'famous:core:components:size-absolute-y': '[[identity|sizeAbsoluteY]]',
@@ -75,8 +79,20 @@ BEST.module('famous:core:view', 'HEAD', {
             'scale-z': '[[setter|camel]]',
 
             'size': function($state, $payload){
-                  $state.set('sizeAbsolute', $payload);
+                var xSize = $payload[0];
+                var ySize = $payload[1];
+                var zSize = $payload[2];
+
+                if(xSize === true) $state.set('sizeTrueX');
+                else if(xSize != undefined) $state.set('sizeAbsoluteX', xSize);
+
+                if(ySize === true) $state.set('sizeTrueY');
+                else if(ySize != undefined) $state.set('sizeAbsoluteY', ySize);
+
+                if(zSize === true) $state.set('sizeTrueZ');
+                else if(zSize != undefined) $state.set('sizeAbsoluteZ', zSize);
             },
+
             'size-absolute': '[[setter|camel]]',
             'size-absolute-x': '[[setter|camel]]',
             'size-absolute-y': '[[setter|camel]]',

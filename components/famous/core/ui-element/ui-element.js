@@ -78,7 +78,20 @@ BEST.module('famous:core:ui-element', 'HEAD', {
             'scale-x': '[[setter|camel]]',
             'scale-y': '[[setter|camel]]',
             'scale-z': '[[setter|camel]]',
-            'size': function($state, $payload){ $state.set('sizeAbsolute', $payload); },
+            'size': function($state, $payload){ 
+                var xSize = $payload[0];
+                var ySize = $payload[1];
+                var zSize = $payload[2];
+
+                if(xSize === true) $state.set('sizeTrueX');
+                else if(xSize != undefined) $state.set('sizeAbsoluteX', xSize);
+
+                if(ySize === true) $state.set('sizeTrueY');
+                else if(ySize != undefined) $state.set('sizeAbsoluteY', ySize);
+
+                if(zSize === true) $state.set('sizeTrueZ');
+                else if(zSize != undefined) $state.set('sizeAbsoluteZ', zSize);
+            },
             'size-absolute': '[[setter|camel]]',
             'size-absolute-x': '[[setter|camel]]',
             'size-absolute-y': '[[setter|camel]]',
