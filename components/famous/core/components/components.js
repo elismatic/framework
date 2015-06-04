@@ -44,6 +44,19 @@ BEST.module('famous:core:components', 'HEAD', {
             'scale-y': function($famousNode, $payload) { $famousNode.setScale(null, $payload, null); },
             'scale-z': function($famousNode, $payload) { $famousNode.setScale(null, null, $payload); },
 
+            'size-true' : function($famousNode) {
+                $famousNode.setSizeMode(2, 2, 2);
+            },
+            'size-true-x' : function($famousNode) {
+                $famousNode.setSizeMode(2, null, null);
+            },
+            'size-true-y' : function($famousNode) {
+                $famousNode.setSizeMode(null, 2, null);
+            },
+            'size-true-z' : function($famousNode) {
+                $famousNode.setSizeMode(null, null, 2);
+            },
+
             'size-absolute': function($famousNode, $payload) {
                 $famousNode.setSizeMode(1, 1, 1);
                 $famousNode.setAbsoluteSize($payload[0], $payload[1], $payload[2]);
@@ -58,7 +71,7 @@ BEST.module('famous:core:components', 'HEAD', {
             },
             'size-absolute-z': function($famousNode, $payload) {
                 $famousNode.setSizeMode(null, null, 1);
-                $famousNode.setAbsoluteSize(null, null, $payload[2]);
+                $famousNode.setAbsoluteSize(null, null, $payload);
             },
 
             'size-proportional': function($famousNode, $payload) {
@@ -75,7 +88,7 @@ BEST.module('famous:core:components', 'HEAD', {
             },
             'size-proportional-z': function($famousNode, $payload) {
                 $famousNode.setSizeMode(null, null, 0);
-                $famousNode.setProportionalSize(null, null, $payload[2]);
+                $famousNode.setProportionalSize(null, null, $payload);
             },
 
             'size-differential': function($famousNode, $payload) {
@@ -92,7 +105,7 @@ BEST.module('famous:core:components', 'HEAD', {
             },
             'size-differential-z': function($famousNode, $payload) {
                 $famousNode.setSizeMode(null, null, 0);
-                $famousNode.setDifferentialSize(null, null, $payload[2]);
+                $famousNode.setDifferentialSize(null, null, $payload);
             }
         }
     }
