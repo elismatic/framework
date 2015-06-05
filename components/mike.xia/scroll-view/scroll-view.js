@@ -1,25 +1,3 @@
-// //in a parent module, which uses scroll-view ..
-
-// view#twitter-app
-//   tweet.scroll-item
-
-// '.scroll-item' : {
-//   //creates arbitrary views that could contain anything
-//   //from a tweet with image, title, etc,
-//   //to groups of views for a ted carousel
-//   '$repeat' : function(tweetsData) {
-//     var tweets = [];
-//     for(var i=0; i<tweetsData.length; i++) {
-//       tweets.push({
-//         blahblah
-//       })
-
-//       //true sizing?  
-//     }
-//     return tweets;
-//   }
-// }
-
 BEST.scene('mike.xia:scroll-view', 'HEAD', {
     behaviors: {
         '#scroll-container' : {
@@ -28,18 +6,22 @@ BEST.scene('mike.xia:scroll-view', 'HEAD', {
           },
           overflow : function(direction) {
             return direction === 'horizontal' ? 'scroll-x' : 'scroll-y';
-          }
+          },
         },
         '#scroll-item' : {
           'position' : function($index) {
             console.log($index);
+            return [0, 0, 0]
           },
           '$yield' : '.scroll-item'
         }
     },
     events: {
-        //lifecycle
-
+        '$lifecycle': {
+            'post-load': function($state) {
+              console.log('LOADED SCROLL-VIEW')
+            }
+        },
         $public : {
           // size : '[[setter|container-size]]',
           'size' : function($state, $payload) {
