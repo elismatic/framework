@@ -16,7 +16,7 @@ BEST.scene('mike.xia:carousel-item', 'HEAD', {
         $public : {
           itemContent : '[[setter]]',
           itemDescription : '[[setter]]',
-          itemSpeakerName : '[[setter]]'
+          itemSpeakerName : '[[setter]]',
           containerSize : '[[setter]]'
         }
     },
