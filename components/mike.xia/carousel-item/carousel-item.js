@@ -1,10 +1,7 @@
 BEST.scene('mike.xia:carousel-item', 'HEAD', {
     behaviors: {
         '#container' : {
-          position : [100, 100],
-          size : function(containerSize) {
-            return containerSize;
-          },
+          size : '[[identity|containerSize]]',
           overflow : 'hidden'
         },
         '#title' : {
@@ -17,14 +14,17 @@ BEST.scene('mike.xia:carousel-item', 'HEAD', {
     },
     events: {
         $public : {
-          // size : '[[setter|container-size]]',
-          'set-size' : function($state, $payload) {
-            $state.set('containerSize', $payload);
-          }
+          itemContent : '[[setter]]',
+          itemDescription : '[[setter]]',
+          itemSpeakerName : '[[setter]]'
+          containerSize : '[[setter]]'
         }
     },
     states: {
-        'containerSize' : [100, 100]
+      itemContent : 'content here',
+      itemDescription : 'description here',
+      itemSpeakerName : 'speaker here',
+      containerSize : [100, 100]
     },
     tree: 'carousel-item.jade'
 });
