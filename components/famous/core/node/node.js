@@ -1,7 +1,26 @@
 BEST.module('famous:core:node', {
     behaviors: {
         '$self' : {
-            '$yield': true
+            '$yield': true,
+
+            'size-true': '[[identity|sizeTrue]]',
+            'size-true-x': '[[identity|sizeTrueX]]',
+            'size-true-y': '[[identity|sizeTrueY]]',
+
+            'size-absolute': '[[identity|sizeAbsolute]]',
+            'size-absolute-x': '[[identity|sizeAbsoluteX]]',
+            'size-absolute-y': '[[identity|sizeAbsoluteY]]',
+            'size-absolute-z': '[[identity|sizeAbsoluteZ]]',
+
+            'size-proportional': '[[identity|sizeProportional]]',
+            'size-proportional-x': '[[identity|sizeProportionalX]]',
+            'size-proportional-y': '[[identity|sizeProportionalY]]',
+            'size-proportional-z': '[[identity|sizeProportionalZ]]',
+
+            'size-differential': '[[identity|sizeDifferential]]',
+            'size-differential-x': '[[identity|sizeDifferentialX]]',
+            'size-differential-y': '[[identity|sizeDifferentialY]]',
+            'size-differential-z': '[[identity|sizeDifferentialZ]]'
         }
     },
     events: {
@@ -94,10 +113,31 @@ BEST.module('famous:core:node', {
                 $state.set('content', content);
                 $dispatcher.trigger('content', content);
             },
-            size: function($famousNode, $payload) {
-                // `size` defaults to `size-absolute`
-                $famousNode.setSizeMode(1, 1, 1);
-                $famousNode.setAbsoluteSize($payload[0], $payload[1], $payload[2]);
+            'size': function($famousNode, $payload, $state) {
+                var xSize = $payload[0];
+                var ySize = $payload[1];
+                var zSize = $payload[2];
+
+                if (xSize === true) $state.set('sizeTrueX');
+                else if (xSize !== undefined) $state.set('sizeAbsoluteX', xSize);
+
+                if (ySize === true) $state.set('sizeTrueY');
+                else if (ySize !== undefined) $state.set('sizeAbsoluteY', ySize);
+
+                if (zSize === true) $state.set('sizeTrueZ');
+                else if (zSize !== undefined) $state.set('sizeAbsoluteZ', zSize);
+            },
+            'size-true': function($famousNode) {
+                $famousNode.setSizeMode(2, 2, 2);
+            },
+            'size-true-x': function($famousNode) {
+                $famousNode.setSizeMode(2, null, null);
+            },
+            'size-true-y': function($famousNode) {
+                $famousNode.setSizeMode(null, 2, null);
+            },
+            'size-true-z': function($famousNode) {
+                $famousNode.setSizeMode(null, null, 2);
             },
             'size-absolute': function($famousNode, $payload) {
                 $famousNode.setSizeMode(1, 1, 1);
