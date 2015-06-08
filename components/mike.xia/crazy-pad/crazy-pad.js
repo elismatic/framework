@@ -130,7 +130,7 @@ var emojis = [
     '&#x1F390;'
 ];
 
-BEST.module('mike.xia:crazy-pad', 'HEAD', {
+BEST.module('mike.xia:crazy-pad', {
     behaviors: {
         '.number-pad' : {
             '$repeat' : function(padCount) {

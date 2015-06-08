@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:scroll-view', 'HEAD', {
+BEST.scene('mike.xia:scroll-view', {
     behaviors: {
         '#scroll-container' : {
           size : function(containerSize) {

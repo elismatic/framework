@@ -1,8 +1,11 @@
-BEST.scene('mike.xia:carousel-item', 'HEAD', {
+BEST.module('mike.xia:carousel-item', {
     behaviors: {
         '#container' : {
           size : '[[identity|containerSize]]',
-          overflow : 'hidden'
+          style : {
+            overflow : 'hidden',
+            backgroundImage : 'url(https://tedcdnpi-a.akamaihd.net/r/images.ted.com/images/ted/9479c4b2b5b202d0fa1b11e9d3e80ff934f883c0_2880x1620.jpg?w=580&quality=90)'
+          }
         },
         '#title' : {
           content : '[[identity|itemTitle]]',
@@ -19,11 +22,6 @@ BEST.scene('mike.xia:carousel-item', 'HEAD', {
         '#detail' : {
           content : '[[identity|itemDetail]]',
           position : '[[identity|itemDetailPosition]]'
-        },
-        '#background' : {
-          style : {
-            'background-image' : 'url(https://tedcdnpi-a.akamaihd.net/r/images.ted.com/images/ted/9479c4b2b5b202d0fa1b11e9d3e80ff934f883c0_2880x1620.jpg?w=580&quality=90)'
-          }
         }
     },
     events: {
@@ -33,11 +31,15 @@ BEST.scene('mike.xia:carousel-item', 'HEAD', {
           itemSpeakerName : '[[setter]]',
           itemDetail : '[[setter]]',
           containerSize : '[[setter]]',
-
           itemSpeakerNamePosition : '[[setter]]',
           itemTitlePosition : '[[setter]]',
           itemDetailPosition : '[[setter]]',
-          itemDescriptionPosition : '[[setter]]',
+          itemDescriptionPosition : '[[setter]]'
+        },
+        '#title' : {
+          'size-change' : function($state, $payload) {
+                console.log('title size', $payload);
+          }
         }
     },
     states: {

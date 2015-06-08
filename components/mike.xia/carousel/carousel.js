@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:carousel', 'HEAD', {
+BEST.scene('mike.xia:carousel', {
     behaviors: {
         '.scroll-item' : {
           //creates arbitrary views that could contain anything
@@ -21,7 +21,8 @@ BEST.scene('mike.xia:carousel', 'HEAD', {
         count : 10
     },
     tree: 'carousel.jade'
-}).config({
+})
+.config({
     // includes: [
     //     'assets/styles/twitter.css'
     // ],
@@ -29,5 +30,3 @@ BEST.scene('mike.xia:carousel', 'HEAD', {
         'mike.xia': ['scroll-view']
     }
 });
-
-
