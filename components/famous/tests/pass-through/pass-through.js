@@ -1,4 +1,4 @@
-BEST.module('famous:tests:pass-through', 'HEAD', {
+BEST.module('famous:tests:pass-through', {
     tree: 'pass-through.html',
     behaviors: {
         '#container' : {
@@ -31,9 +31,9 @@ BEST.module('famous:tests:pass-through', 'HEAD', {
         '#child' : {
             position: [0, 500],
             content: `
-                This child component\'s view is positioned directly by its
+                This child component's view is positioned directly by its
                 parent because the child exposes a pass-through event for
-                \`position\`.
+                'position'.
             `
         }
     },

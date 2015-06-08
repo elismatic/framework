@@ -1,4 +1,4 @@
-BEST.scene('jordan.papaleo:flip-card', 'HEAD', {
+BEST.scene('jordan.papaleo:flip-card', {
     behaviors: {
         '.flip-card': {
             'align': [.5, 0],
@@ -33,8 +33,8 @@ BEST.scene('jordan.papaleo:flip-card', 'HEAD', {
     events: {
         //Publicly accessible params
         '$public': {
-            'position': 'setter',
-            'model': 'setter'
+            'position': '[[setter]]',
+            'model': '[[setter]]'
         },
         '.flip-card': {
             'loaded': (payload) => {

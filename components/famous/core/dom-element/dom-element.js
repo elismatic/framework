@@ -1,4 +1,4 @@
-BEST.module('famous:core:dom-element', 'HEAD', {
+BEST.module('famous:core:dom-element', {
     behaviors: {
         '$self': {
             '$yield': true,
@@ -13,10 +13,12 @@ BEST.module('famous:core:dom-element', 'HEAD', {
         '$public': {
             '$yield': function($state, $payload) {
                 var content = '';
-                var surrogates = $payload.surrogateRoot.childNodes;
-                for (var i = 0; i < surrogates.length; i++) {
-                    var outerHTML = surrogates[i].outerHTML;
-                    content += (outerHTML) ? outerHTML : '';
+                if ($payload && $payload.surrogateRoot) {
+                    var surrogates = $payload.surrogateRoot.childNodes;
+                    for (var i = 0; i < surrogates.length; i++) {
+                        var outerHTML = surrogates[i].outerHTML;
+                        content += (outerHTML) ? outerHTML : '';
+                    }
                 }
                 $state.set('content', content);
             },

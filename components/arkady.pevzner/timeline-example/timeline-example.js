@@ -1,4 +1,4 @@
-BEST.module('arkady.pevzner:timeline-example', 'HEAD', {
+BEST.module('arkady.pevzner:timeline-example', {
     behaviors: {
         '#ui-el' : {
             size: [100, 100],
@@ -6,7 +6,7 @@ BEST.module('arkady.pevzner:timeline-example', 'HEAD', {
                 return myStyle;
             },
             position: function(myTimeline, time) {
-                return BEST.helpers.timeline(myTimeline)(time);
+                return BEST.helpers.piecewise(myTimeline)(time);
             }
         }
     },

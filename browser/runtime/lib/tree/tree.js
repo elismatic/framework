@@ -1,14 +1,10 @@
 'use strict';
 
-var UID = require('./../../../utilities/uid');
 var VirtualDOM = require('./../virtual-dom/virtual-dom');
 
-var NODE_UID_PREFIX = 'node';
+var CONTROL_FLOW_ACTION_KEY = 'control-flow-action';
 var EMPTY_STRING = '';
 var REPEAT_INFO_KEY = 'repeat-info';
-var CONTROL_FLOW_ACTION_KEY = 'control-flow-action';
-
-var HTMLUnknownElement = window.HTMLUnknownElement;
 
 function Tree(rootNode, treeString, dependencies, parentNode) {
     this.rootNode = rootNode;
@@ -18,7 +14,7 @@ function Tree(rootNode, treeString, dependencies, parentNode) {
     var blueprintChildrenWrapper = VirtualDOM.parse(treeString || EMPTY_STRING);
 
     VirtualDOM.transferChildNodes(blueprintChildrenWrapper, this.blueprint);
-    Tree.assignChildUIDs(this.blueprint);
+    VirtualDOM.assignChildUIDs(this.blueprint);
     Tree.assignDependencyTags(this.blueprint, dependencies);
 
     this.expandedBlueprint = null; // Set via event after $if/$repeat
@@ -55,35 +51,6 @@ Tree.prototype.eachChild = function eachChild(cb) {
     }
 };
 
-Tree.isUnknownElement = function isUnknownElement(element) {
-    return element instanceof HTMLUnknownElement;
-};
-
-Tree.setUID = function(node) {
-    VirtualDOM.setUID(node, UID.generate(NODE_UID_PREFIX));
-};
-
-Tree.assignChildUIDs = function assignChildUIDs(parent) {
-    for (var i = 0; i < parent.childNodes.length; i++) {
-        var child = parent.childNodes[i];
-
-        if (child.nodeName === '#text') {
-            if (child.nodeValue.trim()) {
-                var spanWrapper = document.createElement('span');
-                spanWrapper.appendChild(child);
-                parent.insertBefore(spanWrapper, parent.firstChild);
-            }
-        }
-
-        // BEST component DOM nodes are instances of `HTMLUnknownElement`;
-        // we use this to detect whether we have entered a leaf node.
-        if (Tree.isUnknownElement(child)) {
-            Tree.setUID(child);
-            Tree.assignChildUIDs(parent.childNodes[i]);
-        }
-    }
-};
-
 Tree.assignDependencyTags = function assignDependencyTags(node, dependencies) {
     var allNodes = VirtualDOM.query(node, '*');
     for (var i = 0; i < allNodes.length; i++) {
@@ -97,7 +64,7 @@ Tree.assignDependencyTags = function assignDependencyTags(node, dependencies) {
 
 Tree.removeAttributes = function removeAttributes(nodes, attrName) {
     for (var i = 0; i < nodes.length; i++) {
-        nodes[i].removeAttribute(attrName);
+        VirtualDOM.removeAttribute(nodes[i], attrName);
     }
 };
 

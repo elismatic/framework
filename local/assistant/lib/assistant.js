@@ -1,10 +1,12 @@
 'use strict';
 
-var APIClient = require('./api-client');
+var Async = require('async');
 var Chokidar = require('chokidar');
 var Fs = require('fs');
 var Lodash = require('lodash');
 var Path = require('path');
+
+var Builder = require('./../../../shared/builder/lib/builder');
 
 var BLANK = '';
 var DOUBLE_DOT = '..';
@@ -12,14 +14,19 @@ var SLASH = '/';
 
 function Assistant(options) {
     this.setOptions(options);
-    this.apiClient = new APIClient();
+    this.builder = new Builder(this.options.builderOptions);
 }
 
 Assistant.DEFAULTS = {
+    builderOptions: {},
     chokidarIgnored: /[\/\\]\./,
     componentDelimiter: ':',
-    entrypointExtnames: { '.js': true },
-    fileOptions: { encoding: 'utf8' },
+    entrypointExtnames: {
+        '.js': true
+    },
+    fileOptions: {
+        encoding: 'utf8'
+    },
     folderBlacklist: {
         'node_modules': true,
         '.git': true
@@ -27,31 +34,31 @@ Assistant.DEFAULTS = {
 };
 
 Assistant.prototype.setOptions = function(options) {
-    this.options = Lodash.defaults(Lodash.clone(Assistant.DEFAULTS), Lodash.clone(options || {}));
+    this.options = Lodash.assign(Lodash.clone(Assistant.DEFAULTS), Lodash.clone(options || {}));
 };
 
-Assistant.prototype.persistModule = function(moduleName, files, cb) {
-    this.apiClient.saveModule(moduleName, files, cb);
+Assistant.prototype.buildModule = function(moduleName, files, sourceDir, cb) {
+    this.builder.buildModule({ name: moduleName, files: files, sourceDirectory: sourceDir }, cb);
 };
 
-Assistant.prototype.syncAll = function(baseDir, subDir, cb) {
-    this.syncRecursive(baseDir, subDir, function(err, result) {
+Assistant.prototype.buildAll = function(baseDir, subDir, cb) {
+    this.buildRecursive(baseDir, subDir, function(err, result) {
         if (err) cb(err);
         else cb(null, result);
     });
 };
 
-Assistant.prototype.syncSingle = function(baseDir, subDir, cb) {
+Assistant.prototype.buildSingle = function(baseDir, subDir, cb) {
     var moduleName = subDir.split(SLASH).join(this.options.componentDelimiter);
     var files = [];
     this.pushFilesToArray(files, baseDir, subDir, BLANK);
-    this.persistModule(moduleName, files, function(err, result) {
+    this.buildModule(moduleName, files, Path.join(baseDir, subDir), function(err, result) {
         if (err) cb(err);
         else cb(null, result);
     });
 };
 
-Assistant.prototype.syncRecursive = function(baseDir, subDir, cb) {
+Assistant.prototype.tuplesRecursive = function(tuples, baseDir, subDir, cb) {
     var mainPath = Path.join(baseDir, subDir);
     var entries = Fs.readdirSync(mainPath);
     entries.forEach(function(entryPath) {
@@ -60,10 +67,24 @@ Assistant.prototype.syncRecursive = function(baseDir, subDir, cb) {
         if (entryStat.isDirectory()) {
             var partialPath = Path.join(subDir, entryPath);
             if (this.isModuleDir(fullEntryPath)) {
-                this.syncSingle(baseDir, partialPath, cb);
+                tuples.push([baseDir, partialPath]);
             }
-            this.syncRecursive(baseDir, partialPath, cb);
+            this.tuplesRecursive(tuples, baseDir, partialPath);
         }
+    }.bind(this));
+    if (cb) {
+        cb(null, tuples);
+    }
+};
+
+Assistant.prototype.buildRecursive = function(baseDir, subDir, finish) {
+    this.tuplesRecursive([], baseDir, subDir, function(err, tuples) {
+        if (err) {
+            console.error(err);
+        }
+        Async.mapSeries(tuples, function(tuple, cb) {
+            this.buildSingle(tuple[0], tuple[1], cb);
+        }.bind(this), finish);
     }.bind(this));
 };
 
@@ -90,8 +111,7 @@ Assistant.prototype.pushFilesToArray = function(files, baseDir, subDir, prefix) 
             var finalPath = Path.join(prefix, entryPath);
             if (!entryStat.isDirectory()) {
                 var entryContent = Fs.readFileSync(entryFullPath);
-                var encodedContent = new Buffer(entryContent).toString('base64');
-                files.push({ path: finalPath, content: encodedContent });
+                files.push({ path: finalPath, content: entryContent });
             }
             else {
                 this.pushFilesToArray(files, baseDir, entryPartialPath, finalPath);
@@ -151,9 +171,10 @@ Assistant.prototype.watchDirectory = function(baseDir, subDir) {
         var moduleFullDir = this.getModuleDir(baseDir, fileChangedDir);
         if (moduleFullDir) {
             var moduleRelativeDir = moduleFullDir.replace(baseDir, BLANK).replace(/^\//, '');
-            this.syncSingle(baseDir, moduleRelativeDir, function(err, result) {
-                if (err) console.error('best-assistant:', err);
-                console.log('best-assistant:', result.body);
+            this.buildSingle(baseDir, moduleRelativeDir, function(err, result) {
+                if (err) {
+                    console.error('best-assistant:', err);
+                }
             });
         }
     }.bind(this), 1000);

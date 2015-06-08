@@ -1,4 +1,4 @@
-BEST.module('famous:demos:repeat-square', 'HEAD', {
+BEST.module('famous:demos:repeat-square', {
     tree: 'repeat-square.html',
     behaviors: {
         '.square': {
@@ -45,6 +45,6 @@ BEST.module('famous:demos:repeat-square', 'HEAD', {
 .config({
     imports: {
         'famous:core': ['dom-element', 'view', 'ui-element'],
-        'famous:demos': ['clickable-square-with-label']
+        'famous:demos': ['clickable-square']
     }
 });;

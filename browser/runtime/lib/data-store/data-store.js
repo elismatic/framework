@@ -23,6 +23,13 @@ var TIMELINES = {};
 // Attachment objects ('raw code' wrappers)
 var ATTACHMENTS = {};
 
+var DEFAULT_TAG = 'HEAD';
+var BEHAVIORS_KEY = 'behaviors';
+var EVENTS_KEY = 'events';
+var STATES_KEY = 'states';
+var TREE_KEY = 'tree';
+var EXTENSION_KEYS = 'extensions';
+
 function getAttachments(name, tag) {
     if (ATTACHMENTS[name] && ATTACHMENTS[name][tag]) {
         return ObjUtils.clone(ATTACHMENTS[name][tag]);
@@ -82,22 +89,31 @@ function wrapModule(name, tag, mod) {
     return new Wrapper(name, tag, mod);
 }
 
-function getModule(name, tag) {
+function getModuleDefinition(name, tag, useClone) {
+    useClone = useClone === undefined ? true : useClone;
+    tag = tag ? tag : DEFAULT_TAG;
     if (MODULES[name] && MODULES[name][tag]) {
-        return ObjUtils.clone(MODULES[name][tag]);
+        return useClone ? ObjUtils.clone(MODULES[name][tag].definition) : MODULES[name][tag].definition;
+    }
+    else {
+        return null;
     }
 }
 
-function saveModule(name, tag, definition) {
+function saveModule(name, tag, options, definition) {
     if (!MODULES[name]) {
         MODULES[name] = {};
     }
-    MODULES[name][tag] = definition;
-    return getModule(name, tag);
+    MODULES[name][tag] = {
+        definition: definition,
+        options: options
+    };
+    saveDependencies(name, tag, options.dependencies || {});
+    return getModuleDefinition(name, tag);
 }
 
 function hasModule(name, tag) {
-    return !!getModule(name, tag);
+    return !!getModuleDefinition(name, tag);
 }
 
 var NORMAL_FACET_NAMES = {
@@ -107,7 +123,31 @@ var NORMAL_FACET_NAMES = {
     'tree': true
 };
 
-function validateModule(name, tag, definition) {
+function extendDefinition(definition, extensions) {
+    var extensionDefinition;
+    for (var i = 0; i < extensions.length; i++) {
+        extensionDefinition = getModuleDefinition(extensions[i].name, extensions[i].version, false);
+
+        definition[BEHAVIORS_KEY] = definition[BEHAVIORS_KEY] ? definition[BEHAVIORS_KEY] : {};
+        definition[EVENTS_KEY] = definition[EVENTS_KEY] ? definition[EVENTS_KEY] : {};
+        definition[STATES_KEY] = definition[STATES_KEY] ? definition[STATES_KEY] : {};
+
+        if (extensionDefinition) {
+            ObjUtils.naiveExtends(definition[BEHAVIORS_KEY], extensionDefinition[BEHAVIORS_KEY]);
+            ObjUtils.naiveExtends(definition[EVENTS_KEY], extensionDefinition[EVENTS_KEY]);
+            ObjUtils.naiveExtends(definition[STATES_KEY], extensionDefinition[STATES_KEY]);
+
+            if (!definition[TREE_KEY]) {
+                definition[TREE_KEY] = extensionDefinition[TREE_KEY] || '';
+            }
+        }
+    }
+}
+
+function validateModule(name, tag, options, definition) {
+    if (/[A-Z]/.test(name)) {
+        console.warn('`' + name + ' (' + tag + ')` ' + 'has an uppercase letter in its name; use lowercase only');
+    }
     for (var facetName in definition) {
         if (!(facetName in NORMAL_FACET_NAMES)) {
             console.warn('`' + name + ' (' + tag + ')` ' + 'has an unrecognized property `' + facetName + '` in its definition');
@@ -115,13 +155,22 @@ function validateModule(name, tag, definition) {
     }
 }
 
-function registerModule(name, tag, definition) {
+function enhanceModule(name, tag, options, definition) {
+    for (var facetName in definition) {
+        if (options[EXTENSION_KEYS]) {
+            extendDefinition(definition, options[EXTENSION_KEYS]);
+        }
+    }
+}
+
+function registerModule(name, tag, options, definition) {
     if (!hasModule(name, tag)) {
-        validateModule(name, tag, definition);
-        return wrapModule(name, tag, saveModule(name, tag, definition));
+        validateModule(name, tag, options, definition);
+        enhanceModule(name, tag, options, definition);
+        return wrapModule(name, tag, saveModule(name, tag, options, definition));
     }
     else {
-        return wrapModule(name, tag, getModule(name, tag));
+        return wrapModule(name, tag, getModuleDefinition(name, tag));
     }
 }
 
@@ -154,15 +203,17 @@ function getExecutedComponent(selector) {
     return EXECUTED_COMPONENTS[selector];
 }
 
-function saveDependencies(name, tag, requires) {
+// We need to store the dependencies that a given module depends on
+// because we need to assign the version tags to all of the components
+// in the tree for use when selecting elements correctly
+function saveDependencies(name, tag, dependencies) {
     if (!DEPENDENCIES[name]) {
         DEPENDENCIES[name] = {};
     }
     DEPENDENCIES[name][tag] = {};
-    for (var i = 0; i < requires.length; i++) {
-        var moduleName = requires[i][0];
-        var moduleTag = requires[i][1];
-        DEPENDENCIES[name][tag][moduleName] = moduleTag;
+    for (var depName in dependencies) {
+        var depVersion = dependencies[depName];
+        DEPENDENCIES[name][tag][depName] = depVersion;
     }
 }
 
@@ -176,16 +227,16 @@ function getDependencies(name, tag) {
 }
 
 module.exports = {
-    getModule: getModule,
-    registerModule: registerModule,
+    getAttachments: getAttachments,
     getComponent: getComponent,
     getConfig: getConfig,
+    getDependencies: getDependencies,
+    getExecutedComponent: getExecutedComponent,
+    getModuleDefinition: getModuleDefinition,
     getTimelines: getTimelines,
     registerComponent: registerComponent,
-    saveExecutedComponent: saveExecutedComponent,
-    getExecutedComponent: getExecutedComponent,
+    registerModule: registerModule,
     saveDependencies: saveDependencies,
-    getDependencies: getDependencies,
-    getAttachments: getAttachments,
+    saveExecutedComponent: saveExecutedComponent,
     setAttachment: setAttachment
 };

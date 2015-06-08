@@ -1,4 +1,4 @@
-BEST.scene('jordan.papaleo:hello-famous', 'HEAD', {
+BEST.scene('jordan.papaleo:hello-famous', {
         behaviors: {
             ".meow": {
                 'origin': [0.5, 0.5],
@@ -50,7 +50,7 @@ BEST.scene('jordan.papaleo:hello-famous', 'HEAD', {
     })
     .config({
         imports: {
-            'super.demo.day:layouts' : [
+            'famous:demos:layouts' : [
                 'header-footer', 'basic-scroll-view', 'footer-bar',
                 'three-panel-layout', 'template-scroll-layout'
             ]

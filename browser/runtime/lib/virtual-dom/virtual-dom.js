@@ -1,29 +1,50 @@
 'use strict';
 
-var PARSE_TYPE = 'text/html';
-var WRAPPER_NAME = 'wrapper';
-var DOM_PARSER = new DOMParser();
-var DO_CLONE_ATTRIBUTES = true;
-var COMPONENT_DELIM = ':';
-var ESCAPED_COLON = '\\\:';
+var UID = require('./../../../utilities/uid');
 
 var BEST_ROOT = document.createElement('best-root');
-var UID_KEY = 'uid';
+var COMPONENT_DELIM = ':';
+var DO_CLONE_ATTRIBUTES = true;
+var DOM_PARSER = new DOMParser();
+var ESCAPED_COLON = '\\\:';
+var ELEMENT_NODE_TYPE = 1;
+var NODE_UID_PREFIX = 'node';
+var PARSE_TYPE = 'text/html';
+var SELF_KEY = '$self';
+var SPAN_KEY = 'span';
 var TAG_KEY = 'tag';
+var TEXT_NODE_TYPE = 3;
+var UID_KEY = 'uid';
+var UNKNOWN_ELEMENT_NAME = 'HTMLUnknownElement';
+var VALID_HTML_TAGS = [
+    '<a>', '<abbr>', '<address>', '<area>', '<article>', '<aside>', '<audio>', '<b>',
+    '<base>', '<bdi>', '<bdo>', '<blockquote>', '<body>', '<br>', '<button>', '<canvas>',
+    '<caption>', '<cite>', '<code>', '<col>', '<colgroup>', '<command>', '<content>', '<data>',
+    '<datalist>', '<dd>', '<del>', '<details>', '<dfn>', '<div>', '<dl>', '<dt>', '<element>',
+    '<em>', '<embed>', '<fieldset>', '<figcaption>', '<figure>', '<font>', '<footer>', '<form>',
+    '<h1>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>', '<head>', '<header>', '<hgroup>', '<hr>', '<html>',
+    '<i>', '<iframe>', '<image>', '<img>', '<input>', '<ins>', '<kbd>', '<keygen>', '<label>', '<legend>',
+    '<li>', '<link>', '<main>', '<map>', '<mark>', '<menu>', '<menuitem>', '<meta>', '<meter>', '<nav>',
+    '<noframes>', '<noscript>', '<object>', '<ol>', '<optgroup>', '<option>', '<output>', '<p>', '<param>',
+    '<picture>', '<pre>', '<progress>', '<q>', '<rp>', '<rt>', '<rtc>', '<ruby>', '<s>', '<samp>', '<script>',
+    '<section>', '<select>', '<shadow>', '<small>', '<source>', '<span>', '<strong>', '<style>', '<sub>',
+    '<summary>', '<sup>', '<table>', '<tbody>', '<td>', '<template>', '<textarea>', '<tfoot>', '<th>',
+    '<thead>', '<time>', '<title>', '<tr>', '<track>', '<u>', '<ul>', '<var>', '<video>', '<wbr>'
+];
+var WHITE_SPACE_REGEX = /^\s*$/g;
+var WRAPPER_NAME = 'wrapper';
 
 function create(str) {
     return document.createElement(str);
 }
-
-function addNode(childNode, parentNode) {
+ function addNode(childNode, parentNode) {
     parentNode.appendChild(childNode);
 }
 
 function getBaseNode() {
     return BEST_ROOT;
 }
-
-function transferChildNodes(from, to) {
+ function transferChildNodes(from, to) {
     while (from.childNodes[0]) {
         to.appendChild(from.childNodes[0]);
     }
@@ -53,13 +74,18 @@ function clone(node) {
 }
 
 function query(node, selector) {
-    if (selector.indexOf(COMPONENT_DELIM) !== -1) {
-        // Strings like 'foo:bar:baz' aren't supported by
-        // querySelector/querySelectorAll unless the colon
-        // is escaped using a backslash.
-        selector = selector.split(COMPONENT_DELIM).join(ESCAPED_COLON);
+    if (selector === SELF_KEY) {
+        return [node];
     }
-    return node.querySelectorAll(selector);
+    else {
+        if (selector.indexOf(COMPONENT_DELIM) !== -1) {
+            // Strings like 'foo:bar:baz' aren't supported by
+            // querySelector/querySelectorAll unless the colon
+            // is escaped using a backslash.
+            selector = selector.split(COMPONENT_DELIM).join(ESCAPED_COLON);
+        }
+        return node.querySelectorAll(selector);
+    }
 }
 
 // Calls a callback on each target that matches a query. Passes the
@@ -72,12 +98,22 @@ function eachNode(node, selector, cb) {
 }
 
 function attachAttributeFromJSON(node, json, key) {
+    // Attributes cannot be attached to text nodes
+    if (node.nodeType === TEXT_NODE_TYPE) {
+        return;
+    }
+
     var info = JSON.stringify(json);
     node.setAttribute(key, info);
 }
 
 function getAttribute(node, attrName) {
-    return node.getAttribute(attrName);
+    if (node.nodeType === 3) {
+        return null;
+    }
+    else {
+        return node.getAttribute(attrName);
+    }
 }
 
 function queryAttribute(node, attributeName, value) {
@@ -99,8 +135,20 @@ function getTag(node) {
     return node.getAttribute(TAG_KEY);
 }
 
-function setUID(node, uid) {
-    node.setAttribute(UID_KEY, uid);
+function setUID(node) {
+    node.setAttribute(UID_KEY, UID.generate(NODE_UID_PREFIX));
+}
+
+function assignChildUIDs(parentNode) {
+    var i;
+    var child;
+    for (i = 0; i < parentNode.children.length; i++) {
+        child = parentNode.children[i];
+        if (!isValidHTMLElement(child)) {
+            setUID(child);
+            assignChildUIDs(parentNode.children[i]);
+        }
+    }
 }
 
 function getUID(node) {
@@ -135,26 +183,91 @@ function isDescendant(desendant, progenitor) {
     return result;
 }
 
+function isValidHTMLElement(domNode) {
+    if (domNode.constructor.name === UNKNOWN_ELEMENT_NAME) {
+        return false;
+    }
+    else {
+        var tag = '<' + domNode.tagName.toLowerCase() + '>';
+        return VALID_HTML_TAGS.indexOf(tag) !== -1;
+    }
+}
+
+function isTextNode(node) {
+    return node.nodeType === TEXT_NODE_TYPE;
+}
+
+function stripHTMLElements(domNode) {
+    var htmlElements = [];
+    var nodesToProcess = domNode.childNodes.length;
+    var processCount = 0;
+    var childIndex = 0;
+    var child;
+    var span;
+    while (processCount < nodesToProcess) {
+        child = domNode.childNodes[childIndex];
+        if (isTextNode(child) || isValidHTMLElement(child)) {
+            htmlElements.push(domNode.removeChild(child));
+        }
+        else {
+            childIndex++;
+        }
+        processCount++;
+    }
+    return htmlElements;
+}
+
+function removeAttribute(domNode, name) {
+    domNode.removeAttribute(name);
+    return domNode;
+}
+
+function doNodesHaveContent(nodes) {
+    if (nodes.length === 0) {
+        return false;
+    }
+    else {
+        var node;
+        for (var i = 0; i < nodes.length; i++) {
+            node = nodes[i];
+            if (node.nodeType === ELEMENT_NODE_TYPE) {
+                return true;
+            }
+            else if (node.nodeType === TEXT_NODE_TYPE) {
+                if (node.textContent.match(WHITE_SPACE_REGEX) === null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
 module.exports = {
-    create: create,
     addNode: addNode,
-    getBaseNode: getBaseNode,
-    parse: parse,
-    clone: clone,
-    query: query,
-    eachNode: eachNode,
     attachAttributeFromJSON: attachAttributeFromJSON,
+    assignChildUIDs: assignChildUIDs,
+    clone: clone,
+    create: create,
+    deleteNode: deleteNode,
+    doNodesHaveContent: doNodesHaveContent,
+    eachNode: eachNode,
     getAttribute: getAttribute,
+    getBaseNode: getBaseNode,
+    getNodeByUID: getNodeByUID,
+    getParentUID: getParentUID,
+    getTag: getTag,
+    getUID: getUID,
+    isDescendant: isDescendant,
+    isValidHTMLElement: isValidHTMLElement,
+    parse: parse,
+    query: query,
     queryAttribute: queryAttribute,
+    removeAttribute: removeAttribute,
     removeChildNodes: removeChildNodes,
-    transferChildNodes: transferChildNodes,
     removeNodeByUID: removeNodeByUID,
     setTag: setTag,
-    getTag: getTag,
     setUID: setUID,
-    getUID: getUID,
-    getParentUID: getParentUID,
-    getNodeByUID: getNodeByUID,
-    deleteNode: deleteNode,
-    isDescendant: isDescendant
+    stripHTMLElements: stripHTMLElements,
+    transferChildNodes: transferChildNodes
 };

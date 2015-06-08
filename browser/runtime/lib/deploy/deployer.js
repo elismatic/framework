@@ -4,72 +4,40 @@ var ObjUtils = require('./../../../utilities/object');
 var Component = require('./../component/component');
 var DataStore = require('./../data-store/data-store');
 
+var PathingHelpers = require('./../../../../shared/builder/lib/storage-helpers/pathing');
+
 var SLASH = '/';
 
 function Deployer() {
     this.options = ObjUtils.clone(Deployer.DEFAULTS);
-    this.modulesInserted = {};
-    this.modulesLoaded = {};
-    this.assetsInserted = {};
     this.assetsLoaded = {};
-}
-
-// We assume developers use Browserify to build the runtime
-var ECOSYSTEM_BASE_URI = process.env.ECOSYSTEM_BASE_URI;
-if (!ECOSYSTEM_BASE_URI) {
-    throw new Error('best-runtime: `ECOSYSTEM_BASE_URI` must be specified!');
+    this.assetsInserted = {};
+    this.awaitInterval = 16;
+    this.includesReady = {};
 }
 
 Deployer.DEFAULTS = {
-    awaitInterval: 10,
-    awaitMaxTime: 1000,
     componentDelimiter: ':',
-    defaultModuleTag: 'HEAD',
-    bucket: 'best-ecosystem',
-    bundlesFolder: '~bundles',
-    versionsFolder: '~versions',
-    bundleFilename: 'bundle.js'
+    bundleAssetPath: '~bundles/bundle.js',
+    codeManagerAssetReadHost: process.env.BEST_ASSET_READ_HOST,
+    codeManagerApiVersion: 'v1',
+    codeManagerAssetGetRoute: 'GET|default|/:apiVersion/blocks/:blockIdOrName/versions/:versionRefOrTag/assets/:assetPath'
 };
+
+if (!Deployer.DEFAULTS.codeManagerAssetReadHost || Deployer.DEFAULTS.codeManagerAssetReadHost === 'undefined') {
+    throw new Error('To build the runtime, you must specify a `BEST_ASSET_READ_HOST`/`options.codeManagerAssetReadHost`');
+}
 
 Deployer.prototype.getModulePath = function(name) {
     return name.split(this.options.componentDelimiter).join(SLASH);
 };
 
 Deployer.prototype.getBundleURL = function(name, tag) {
-    return ECOSYSTEM_BASE_URI +
-             [this.options.bucket,
-              this.getModulePath(name),
-              this.options.bundlesFolder,
-              tag || this.options.defaultModuleTag,
-              this.options.bundleFilename
-            ].join(SLASH);
+    return PathingHelpers.buildAssetURL.call(this, name, tag, this.options.bundleAssetPath);
 };
 
-Deployer.prototype.getVersionBaseURL = function(name, tag) {
-    return ECOSYSTEM_BASE_URI +
-             [this.options.bucket,
-              this.getModulePath(name),
-              this.options.versionsFolder,
-              tag || this.options.defaultModuleTag
-            ].join(SLASH);
-};
-
-Deployer.prototype.markModuleLoaded = function(name, tag) {
-    if (!this.modulesLoaded[name]) {
-        this.modulesLoaded[name] = {};
-    }
-    this.modulesLoaded[name][tag] = true;
-};
-
-Deployer.prototype.markModuleInserted = function(name, tag) {
-    if (!this.modulesInserted[name]) {
-        this.modulesInserted[name] = {};
-    }
-    this.modulesInserted[name][tag] = true;
-};
-
-Deployer.prototype.isAssetInserted = function(url) {
-    return !!this.assetsInserted[url];
+Deployer.prototype.getAssetURL = function(name, tag, assetPath) {
+    return PathingHelpers.buildAssetURL.call(this, name, tag, assetPath);
 };
 
 Deployer.prototype.insertAsset = function(url, cb) {
@@ -95,17 +63,12 @@ Deployer.prototype.insertAsset = function(url, cb) {
             }.bind(this));
             break;
         default:
-            console.warn('Unexpected asset type `' + format + '`');
-            console.warn(url);
+            console.warn('Unexpected include type `' + format + '` @ ' + url);
             this.assetsLoaded[url] = true;
             cb();
             break;
     }
     this.assetsInserted[url] = true;
-};
-
-Deployer.prototype.isModuleInserted = function(name, tag) {
-    return !!(this.modulesInserted[name] && this.modulesInserted[name][tag]);
 };
 
 Deployer.prototype.insertStylesheet = function(url, cb) {
@@ -134,112 +97,73 @@ Deployer.prototype.insertHTML = function(url, cb) {
     document.body.appendChild(link);
 };
 
-Deployer.prototype.insertModule = function(name, tag, cb) {
-    var url = this.getBundleURL(name, tag);
-    this.insertJavaScript(url, function() {
-        this.markModuleLoaded(name, tag);
-        if (cb) {
-            cb(null, name, tag, url);
-        }
+// Process any includes (remote URLs) and fire the callback
+Deployer.prototype.includes = function(moduleName, moduleTag, includeURLs, cb) {
+    var includesLength = includeURLs.length;
+    var includesLoaded = 0;
+    if (includesLength < 1) {
+        cb();
+        this.includesReady[moduleName] = {};
+        this.includesReady[moduleName][moduleTag] = [];
+    }
+    for (var i = 0; i < includeURLs.length; i++) {
+        var includeURL = includeURLs[i];
+        this.insertAsset(includeURL, function() {
+            if (++includesLoaded === includesLength) {
+                cb();
+                this.includesReady[moduleName] = {};
+                this.includesReady[moduleName][moduleTag] = includeURLs;
+            }
+        }.bind(this));
+    }
+};
+
+// Return T/F if the given includes are ready
+Deployer.prototype.areIncludesReady = function(moduleName, moduleTag) {
+    return !!this.includesFor(moduleName, moduleTag);
+};
+
+// Return the includes for a given module/tag pair
+Deployer.prototype.includesFor = function(moduleName, moduleTag) {
+    return this.includesReady[moduleName] && this.includesReady[moduleName][moduleTag];
+};
+
+// Run the given callback when all includes for the given module are done.
+Deployer.prototype.whenIncludesAreReady = function(moduleName, moduleTag, cb) {
+    if (this.areIncludesReady(moduleName, moduleTag)) {
+        cb(null, this.includesFor(moduleName, moduleTag));
+    }
+    else {
+        var includesWatcher = setInterval(function() {
+            if (this.areIncludesReady(moduleName, moduleTag)) {
+                clearInterval(includesWatcher);
+                cb(this.includesFor(moduleName, moduleTag));
+            }
+        }.bind(this), this.awaitInterval);
+    }
+};
+
+// Load the given module and kick off the rendering process
+Deployer.prototype.deploy = function(moduleName, moduleTag, selector) {
+    var bundleURL = this.getBundleURL(moduleName, moduleTag);
+    console.info('Deploying', bundleURL);
+    this.insertJavaScript(bundleURL, function() {
+        // This can be called before the includes have finished loading
+        this.whenIncludesAreReady(moduleName, moduleTag, function() {
+            this.execute(moduleName, moduleTag, selector);
+        }.bind(this));
     }.bind(this));
-    this.markModuleInserted(name, tag);
 };
 
-Deployer.prototype.everythingLoaded = function() {
-    var result = true;
-    var inserted = this.modulesInserted;
-    var loaded = this.modulesLoaded;
-    for (var name in inserted) {
-        var versions = inserted[name];
-        for (var tag in versions) {
-            if (!loaded[name] || !loaded[name][tag]) {
-                result = false;
-            }
-        }
-    }
-    return result;
-};
-
-Deployer.prototype.deploy = function(name, tag, selector) {
-    var awaitInterval = this.options.awaitInterval;
-    this.insertModule(name, tag, function(err, insertedName, insertedTag) {
-        if (err) {
-            console.error(err);
-        }
-        var deployInterval = setInterval(function() {
-            if (this.everythingLoaded()) {
-                clearInterval(deployInterval);
-                this.execute(insertedName, insertedTag, selector);
-            }
-        }.bind(this), awaitInterval);
-    }.bind(this));
-};
-
-Deployer.prototype.postRequireHook = function(name, tag, finish) {
-    finish();
-};
-
-Deployer.prototype.looksLikeModuleRequire = function(name, tag) {
-    var parts = name.split('.');
-    var lastPart = parts[parts.length - 1];
-    return tag && tag.length && lastPart.indexOf(this.options.componentDelimiter) !== -1;
-};
-
-// Fire the 'finish' callback once all of the elements in 'requires' array
-// have been loaded onto the page. 'Requires' is a list of either name-tag
-// component desginators, or asset URLs (such as JavaScripts).
-Deployer.prototype.requires = function(name, tag, requires, finish) {
-    DataStore.saveDependencies(name, tag, requires);
-    var versionBaseURL = this.getVersionBaseURL(name, tag);
-
-    var requiresLength = requires.length;
-    if (requiresLength === 0) {
-        return this.postRequireHook(name, tag, finish); // Early return if nothing to do
-    }
-    var requiresLoaded = 0;
-    for (var i = 0; i < requiresLength; i++) {
-        var requireName = requires[i][0];
-        var requireTag = requires[i][1];
-        if (this.looksLikeModuleRequire(requireName, requireTag)) {
-            if (!this.isModuleInserted(requireName, requireTag)) {
-                this.insertModule(requireName, requireTag, function() {
-                    if (++requiresLoaded === requiresLength) {
-                        this.postRequireHook(name, tag, finish);
-                    }
-                }.bind(this));
-            }
-            else {
-                if (++requiresLoaded === requiresLength) {
-                    this.postRequireHook(name, tag, finish);
-                }
-            }
-        }
-        else {
-            var requireURL = requireName;
-            var fullURL = versionBaseURL + SLASH + requireURL;
-            if (!this.isAssetInserted(fullURL)) {
-                this.insertAsset(fullURL, function() {
-                    if (++requiresLoaded === requiresLength) {
-                        this.postRequireHook(name, tag, finish);
-                    }
-                }.bind(this));
-            }
-            else {
-                if (++requiresLoaded === requiresLength) {
-                    this.postRequireHook(name, tag, finish);
-                }
-            }
-        }
-    }
-};
-
+// Attach an attachment to a the current module
 Deployer.prototype.attach = function(name, tag, selector, executable) {
     DataStore.setAttachment(name, tag, {
-        selector: selector,
-        executable: executable
+       selector: selector,
+       executable: executable
     });
 };
 
+// Execute a component that has already been registered
 Deployer.prototype.execute = function(name, tag, selector) {
     var component = Component.executeComponent(name, tag, selector);
     window.comp = component;

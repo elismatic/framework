@@ -304,11 +304,14 @@ Events.prototype.sendMessages = function sendMessages(messages, uid) {
 
 Events.sendMessageBySelector = function sendMessageBySelector(key, value, uid, selector) {
     var parentComponent = DataStore.getComponent(uid);
-    var targets = VirtualDOM.query(parentComponent.tree.getExpandedBlueprint(), selector);
-    var component;
-    for (var i = 0; i < targets.length; i++) {
-        component = DataStore.getComponent(VirtualDOM.getUID(targets[i]));
-        component.sendMessage(key, value);
+    var expandedBlueprint = parentComponent.tree.getExpandedBlueprint();
+    if (expandedBlueprint) {
+        var targets = VirtualDOM.query(expandedBlueprint, selector);
+        var component;
+        for (var i = 0; i < targets.length; i++) {
+            component = DataStore.getComponent(VirtualDOM.getUID(targets[i]));
+            component.sendMessage(key, value);
+        }
     }
 };
 
@@ -353,7 +356,7 @@ Events.getDirectEventAction = function getDirectEventAction(name, dependencies) 
     var moduleName = name.slice(0, lastDelimIdx);
     var handlerName = name.slice(lastDelimIdx + 1);
     var moduleTag = dependencies[moduleName];
-    var bestModule = DataStore.getModule(moduleName, moduleTag);
+    var bestModule = DataStore.getModuleDefinition(moduleName, moduleTag);
 
     var foundEvent;
     var fallbackEvent;

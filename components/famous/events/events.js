@@ -1,4 +1,4 @@
-BEST.module('famous:events', 'HEAD', {
+BEST.module('famous:events', {
     events: {
         '$public': {
             '$miss': function($DOMElement, $famousNode, $payload) {
@@ -30,5 +30,6 @@ BEST.module('famous:events', 'HEAD', {
 .config({
     imports: {
         'famous:events': [] // prevent expansion of 'size-change' to 'famous:events:size-change'
-    }
+    },
+    extends: []
 });

@@ -166,7 +166,7 @@ const Tweets = [
     }
 ];
 
-BEST.scene('creative:twitter', 'HEAD', {
+BEST.scene('creative:twitter', {
     behaviors: {
         '#container': {
             'align': [0.5, 0],
@@ -442,6 +442,6 @@ BEST.scene('creative:twitter', 'HEAD', {
     ],
     imports: {
         'creative:twitter': ['tweet', 'message', 'notification', 'profile'],
-        'super.demo.day:layouts': ['header-footer']
+        'famous:demos:layouts': ['header-footer']
     }
 });

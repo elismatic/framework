@@ -1,4 +1,4 @@
-BEST.scene('creative:twitter:tweetM', 'HEAD', {
+BEST.scene('creative:twitter:tweetM', {
     behaviors: {
         '#background': {
             style: {
@@ -96,8 +96,8 @@ BEST.scene('creative:twitter:tweetM', 'HEAD', {
     },
     events: {
         '$public': {
-            'position': 'setter',
-            'model': 'setter'
+            'position': '[[setter]]',
+            'model': '[[setter]]'
         },
         '#tweet-image': {
             'size-change': function($state, $payload) {

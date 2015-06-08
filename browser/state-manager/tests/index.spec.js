@@ -14,13 +14,14 @@ var _observerState = fixtures.observerState;
 test('StateManager', function(t) {
 
     t.test('constructor', function(t) {
-        t.equal(typeof StateManager, 'function', 'should be a function')
+        t.equal(typeof StateManager, 'function', 'should be a function');
 
         t.doesNotThrow(function() {
             new StateManager(clone(_state), FamousEngine, Transitionable);
         });
 
         t.ok(StateManager, 'should export');
+
         t.end();
     });
 
@@ -31,6 +32,7 @@ test('StateManager', function(t) {
         t.equal(SM.get('string'), 'two', 'should get string state');
         t.deepEqual(SM.get('array'), [3, 3, 3], 'should get array state');
         t.equal(SM.get('boolean'), true, 'should get boolean state');
+
 
         t.equal(SM.get([
             'nestedState',
@@ -221,7 +223,7 @@ test('StateManager', function(t) {
         t.deepEqual(SM.get('array'), [4, 4, 4], 'should tween array state after tweening number state');
         time = 2000;
         SM.onUpdate();
-        t.deepEqual(SM.get('array'), [5, 5, 5])
+        t.deepEqual(SM.get('array'), [5, 5, 5]);
         time = 2500;
         SM.onUpdate();
         t.equal(SM.get(['nestedState', 'moreNesting', 'nestingArray', 0]), 0.5, 'should tween nested state after tweening number state');
@@ -352,6 +354,146 @@ test('StateManager', function(t) {
         t.end();
     });
 
+    t.test('setting state #11 - same state set(value).set(value).set(value)', function(t) {
+        var SM = new StateManager(clone(_state), FamousEngine, Transitionable);
+
+        SM
+            .set('number', 0)
+            .set('number', 1)
+            .set('number', 2)
+            .set('number', 3);
+
+        t.equal(SM.get('number'), 3, 'should override state');
+
+        t.end();
+    });
+
+    t.test('setting state #12 - same state set(transition).set(transition).set(transition)', function(t) {
+        var time = 0;
+        var _now = Date.now();
+
+        Transitionable.Clock = {
+            now: function() {
+                return time;
+            }
+        };
+
+        var SM = new StateManager(clone(_state), FamousEngine, Transitionable);
+
+        time = 0;
+        SM
+            .set('number', 0, { duration: 1000 })
+            .set('number', 1, { duration: 1000 })
+            .set('number', 2, { duration: 1000 })
+            .set('number', 3, { duration: 1000 });
+        SM.onUpdate();
+        t.equal(SM.get('number'), 1);
+        time = 500;
+        SM.onUpdate();
+        t.equal(SM.get('number'), 2, 'should override state transition');
+        time = 1000;
+        SM.onUpdate();
+        t.equal(SM.get('number'), 3);
+
+        t.end();
+    });
+
+    t.test('setting state #13 - simultaneous set(transition).thenSet(transition)', function(t) {
+        var time = 0;
+        var _now = Date.now();
+
+        Transitionable.Clock = {
+            now: function() {
+                return time;
+            }
+        };
+
+        var SM = new StateManager(clone(_state), FamousEngine, Transitionable);
+
+        SM
+            .set('w', 0)
+            .set('x', 0)
+            .set('y', 0)
+            .set('z', 0);
+
+        time = 0;
+        SM
+            .set('w', 1, { duration: 1000 })
+            .thenSet('x', 1, { duration: 1000 });
+
+        SM
+            .set('y', 1, { duration: 500 })
+            .thenSet('z', 1, { duration: 1000 });
+
+        time = 500;
+        SM.onUpdate();
+        t.equal(SM.get('w'), 0.5);
+        t.equal(SM.get('y'), 1);
+        time = 1000;
+        SM.onUpdate();
+        t.equal(SM.get('w'), 1);
+        t.equal(SM.get('z'), 0.5, 'should transition z');
+        time = 1500;
+        SM.onUpdate();
+        t.equal(SM.get('z'), 1);
+        t.equal(SM.get('x'), 0.5, 'should transition x');
+
+        t.end();
+    });
+
+    t.test('setting state #14 - state batching set(value)', function(t) {
+        var SM = new StateManager(clone(_state), FamousEngine, Transitionable);
+
+        SM.set({
+            'x': 0,
+            'y': 0,
+            'z': 0
+        });
+
+        t.equal(SM.get('x'), 0, 'should set x');
+        t.equal(SM.get('y'), 0, 'should set y');
+        t.equal(SM.get('z'), 0, 'should set z');
+
+        t.end();
+    });
+
+    t.test('setting state #15 - state batching set(transition)', function(t) {
+        var time = 0;
+        var _now = Date.now();
+
+        Transitionable.Clock = {
+            now: function() {
+                return time;
+            }
+        };
+
+        var SM = new StateManager(clone(_state), FamousEngine, Transitionable);
+
+        SM.set({
+            'x': 0,
+            'y': 0,
+            'z': 0
+        });
+
+        t.equal(SM.get('x'), 0);
+        t.equal(SM.get('y'), 0);
+        t.equal(SM.get('z'), 0);
+
+        time = 0;
+        SM.set({
+            'x': 1,
+            'y': 1,
+            'z': 1
+        }, { duration: 1000 });
+        time = 500;
+        SM.onUpdate();
+        t.equal(SM.get('x'), 0.5, 'should tween x');
+        t.equal(SM.get('y'), 0.5, 'should tween y');
+        t.equal(SM.get('z'), 0.5, 'should tween z');
+
+        t.end();
+    });
+
     t.test('subscribing to state #1 - subscribeTo', function(t) {
         var SM = new StateManager(clone(_state), FamousEngine, Transitionable);
 
@@ -362,7 +504,7 @@ test('StateManager', function(t) {
             }
             observerState.hasFired = true;
             observerState.args.push(key, value);
-        }
+        };
 
         SM.subscribeTo('number', observerFunc);
         SM.set('number', 0);
@@ -382,7 +524,7 @@ test('StateManager', function(t) {
             }
             observerState.hasFired = true;
             observerState.args.push(key, value);
-        }
+        };
 
         SM.subscribe(globalObserverFunc);
         SM.set('number', 0);
@@ -403,7 +545,7 @@ test('StateManager', function(t) {
             }
             observerState.hasFired = true;
             observerState.args.push(key, value);
-        }
+        };
 
         SM.subscribeOnce(observerFunc);
         SM.set('number', 0);
@@ -425,7 +567,7 @@ test('StateManager', function(t) {
             }
             observerState.hasFired = true;
             observerState.args.push(key, value);
-        }
+        };
 
         SM.subscribeTo('number', observerFunc);
         SM.set('number', 0);
@@ -433,7 +575,7 @@ test('StateManager', function(t) {
 
         SM.unsubscribeFrom('number', observerFunc);
         SM.set('number', 1);
-        t.ok(!observerState.hasFiredMoreThanOnce, 'should not fire observer once unsubscribed')
+        t.ok(!observerState.hasFiredMoreThanOnce, 'should not fire observer once unsubscribed');
 
         t.end();
     });
@@ -448,7 +590,7 @@ test('StateManager', function(t) {
             }
             observerState.hasFired = true;
             observerState.args.push(key, value);
-        }
+        };
 
         SM.subscribe(observerFunc);
         SM.set('number', 0);
@@ -456,7 +598,7 @@ test('StateManager', function(t) {
 
         SM.unsubscribe(observerFunc);
         SM.set('number', 1);
-        t.ok(!observerState.hasFiredMoreThanOnce, 'should not fire observer once unsubscribed')
+        t.ok(!observerState.hasFiredMoreThanOnce, 'should not fire observer once unsubscribed');
 
         t.end();
     });
