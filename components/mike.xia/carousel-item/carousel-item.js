@@ -1,5 +1,15 @@
 BEST.module('mike.xia:carousel-item', {
     behaviors: {
+        '#title' : {
+          content : '[[identity|itemTitle]]',
+          position : '[[identity|itemTitlePosition]]',
+          // size : [700, true]
+        },
+        '#description' : {
+          content : '[[identity|itemDescription]]',
+          position : '[[identity|itemDescriptionPosition]]',
+          size : [700, true]
+        },
         '#container' : {
           size : '[[identity|containerSize]]',
           style : {
@@ -7,17 +17,9 @@ BEST.module('mike.xia:carousel-item', {
             backgroundImage : 'url(https://tedcdnpi-a.akamaihd.net/r/images.ted.com/images/ted/9479c4b2b5b202d0fa1b11e9d3e80ff934f883c0_2880x1620.jpg?w=580&quality=90)'
           }
         },
-        '#title' : {
-          content : '[[identity|itemTitle]]',
-          position : '[[identity|itemTitlePosition]]'
-        },
         '#speaker-name' : {
           content : '[[identity|itemSpeakerName]]',
           position : '[[identity|itemSpeakerNamePosition]]'
-        },
-        '#description' : {
-          content : '[[identity|itemDescription]]',
-          position : '[[identity|itemDescriptionPosition]]'
         },
         '#detail' : {
           content : '[[identity|itemDetail]]',
@@ -36,9 +38,24 @@ BEST.module('mike.xia:carousel-item', {
           itemDetailPosition : '[[setter]]',
           itemDescriptionPosition : '[[setter]]'
         },
+        '#description' : {
+          'size-change' : function($state, $payload) {
+                console.log('desc size', $payload);
+          }
+        },
         '#title' : {
           'size-change' : function($state, $payload) {
                 console.log('title size', $payload);
+          }
+        },
+        '#detail' : {
+          'size-change' : function($state, $payload) {
+                console.log('detail size', $payload);
+          }
+        },
+        '#speaker-name' : {
+          'size-change' : function($state, $payload) {
+                console.log('speaker-name size', $payload);
           }
         }
     },
