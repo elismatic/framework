@@ -1,26 +1,7 @@
 BEST.module('famous:core:node', {
     behaviors: {
         '$self' : {
-            '$yield': true,
-
-            'size-true': '[[identity|sizeTrue]]',
-            'size-true-x': '[[identity|sizeTrueX]]',
-            'size-true-y': '[[identity|sizeTrueY]]',
-
-            'size-absolute': '[[identity|sizeAbsolute]]',
-            'size-absolute-x': '[[identity|sizeAbsoluteX]]',
-            'size-absolute-y': '[[identity|sizeAbsoluteY]]',
-            'size-absolute-z': '[[identity|sizeAbsoluteZ]]',
-
-            'size-proportional': '[[identity|sizeProportional]]',
-            'size-proportional-x': '[[identity|sizeProportionalX]]',
-            'size-proportional-y': '[[identity|sizeProportionalY]]',
-            'size-proportional-z': '[[identity|sizeProportionalZ]]',
-
-            'size-differential': '[[identity|sizeDifferential]]',
-            'size-differential-x': '[[identity|sizeDifferentialX]]',
-            'size-differential-y': '[[identity|sizeDifferentialY]]',
-            'size-differential-z': '[[identity|sizeDifferentialZ]]'
+            '$yield': true
         }
     },
     events: {
