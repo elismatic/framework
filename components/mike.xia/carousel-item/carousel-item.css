@@ -1,5 +1,6 @@
 
 .carousel-item-text {
+  pointer-events: none;
   color: white;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
