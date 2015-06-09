@@ -3,24 +3,24 @@ BEST.module('famous:core:node', {
         '$self' : {
             '$yield': true,
 
-            'famous:core:components:size-true': '[[identity|sizeTrue]]',
-            'famous:core:components:size-true-x': '[[identity|sizeTrueX]]',
-            'famous:core:components:size-true-y': '[[identity|sizeTrueY]]',
+            'size-true': '[[identity|sizeTrue]]',
+            'size-true-x': '[[identity|sizeTrueX]]',
+            'size-true-y': '[[identity|sizeTrueY]]',
 
-            'famous:core:components:size-absolute': '[[identity|sizeAbsolute]]',
-            'famous:core:components:size-absolute-x': '[[identity|sizeAbsoluteX]]',
-            'famous:core:components:size-absolute-y': '[[identity|sizeAbsoluteY]]',
-            'famous:core:components:size-absolute-z': '[[identity|sizeAbsoluteZ]]',
+            'size-absolute': '[[identity|sizeAbsolute]]',
+            'size-absolute-x': '[[identity|sizeAbsoluteX]]',
+            'size-absolute-y': '[[identity|sizeAbsoluteY]]',
+            'size-absolute-z': '[[identity|sizeAbsoluteZ]]',
 
-            'famous:core:components:size-proportional': '[[identity|sizeProportional]]',
-            'famous:core:components:size-proportional-x': '[[identity|sizeProportionalX]]',
-            'famous:core:components:size-proportional-y': '[[identity|sizeProportionalY]]',
-            'famous:core:components:size-proportional-z': '[[identity|sizeProportionalZ]]',
+            'size-proportional': '[[identity|sizeProportional]]',
+            'size-proportional-x': '[[identity|sizeProportionalX]]',
+            'size-proportional-y': '[[identity|sizeProportionalY]]',
+            'size-proportional-z': '[[identity|sizeProportionalZ]]',
 
-            'famous:core:components:size-differential': '[[identity|sizeDifferential]]',
-            'famous:core:components:size-differential-x': '[[identity|sizeDifferentialX]]',
-            'famous:core:components:size-differential-y': '[[identity|sizeDifferentialY]]',
-            'famous:core:components:size-differential-z': '[[identity|sizeDifferentialZ]]'
+            'size-differential': '[[identity|sizeDifferential]]',
+            'size-differential-x': '[[identity|sizeDifferentialX]]',
+            'size-differential-y': '[[identity|sizeDifferentialY]]',
+            'size-differential-z': '[[identity|sizeDifferentialZ]]'
         }
     },
     events: {
@@ -113,30 +113,30 @@ BEST.module('famous:core:node', {
                 $state.set('content', content);
                 $dispatcher.trigger('content', content);
             },
-            size: function($famousNode, $payload, $state) {
+            'size': function($famousNode, $payload, $state) {
                 var xSize = $payload[0];
                 var ySize = $payload[1];
                 var zSize = $payload[2];
 
-                if(xSize === true) $state.set('sizeTrueX');
-                else if(xSize != undefined) $state.set('sizeAbsoluteX', xSize);
+                if (xSize === true) $state.set('sizeTrueX');
+                else if (xSize !== undefined) $state.set('sizeAbsoluteX', xSize);
 
-                if(ySize === true) $state.set('sizeTrueY');
-                else if(ySize != undefined) $state.set('sizeAbsoluteY', ySize);
+                if (ySize === true) $state.set('sizeTrueY');
+                else if (ySize !== undefined) $state.set('sizeAbsoluteY', ySize);
 
-                if(zSize === true) $state.set('sizeTrueZ');
-                else if(zSize != undefined) $state.set('sizeAbsoluteZ', zSize);
+                if (zSize === true) $state.set('sizeTrueZ');
+                else if (zSize !== undefined) $state.set('sizeAbsoluteZ', zSize);
             },
-            'size-true' : function($famousNode) {
+            'size-true': function($famousNode) {
                 $famousNode.setSizeMode(2, 2, 2);
             },
-            'size-true-x' : function($famousNode) {
+            'size-true-x': function($famousNode) {
                 $famousNode.setSizeMode(2, null, null);
             },
-            'size-true-y' : function($famousNode) {
+            'size-true-y': function($famousNode) {
                 $famousNode.setSizeMode(null, 2, null);
             },
-            'size-true-z' : function($famousNode) {
+            'size-true-z': function($famousNode) {
                 $famousNode.setSizeMode(null, null, 2);
             },
             'size-absolute': function($famousNode, $payload) {
