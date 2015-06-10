@@ -1,5 +1,6 @@
 'use strict';
 
+var Chalk = require('chalk');
 var Lodash = require('lodash');
 var Path = require('path');
 
@@ -82,22 +83,38 @@ function findLibraryInvocations(entrypointAST) {
     return libraryInvocations;
 }
 
+function extractModuleDefinitionArg(argsAST) {
+    if (!argsAST) {
+        return EsprimaHelpers.EMPTY_OBJECT_EXPRESSION; // Fallback in case no object is present
+    }
+
+    var moduleDefinition = argsAST[this.options.indexOfModuleDefinitionArgument];
+    if (moduleDefinition.type !== 'ObjectExpression') {
+        console.warn(Chalk.gray('famous'), Chalk.yellow('warn'), 'Incorrect args to `BEST.scene` were given');
+    }
+
+    return moduleDefinition;
+}
+
 function extractModuleDefinitionASTs(entrypointAST) {
     var moduleDefinitions = {};
     var libraryInvocations = findLibraryInvocations.call(this, entrypointAST);
     for (var moduleName in libraryInvocations) {
         var libraryInvocation = libraryInvocations[moduleName];
-        var moduleDefinition = EsprimaHelpers.EMPTY_OBJECT_EXPRESSION; // Fallback in case no object is present
-        if (libraryInvocation.arguments) {
-            moduleDefinition = libraryInvocation.arguments[this.options.indexOfModuleDefinitionArgument];
-        }
+        var moduleDefinition = extractModuleDefinitionArg.call(this, libraryInvocation.arguments);
         moduleDefinitions[moduleName] = moduleDefinition;
     }
     return moduleDefinitions;
 }
 
-function extractEntrypointAST(entrypointFile) {
-    return EsprimaHelpers.parse(entrypointFile.content);
+function extractEntrypointAST(info) {
+    try {
+        return EsprimaHelpers.parse(info.entrypointFile.content);
+    }
+    catch(e) {
+        console.warn(Chalk.gray('famous'), Chalk.red('err'), 'Could not find entrypoint file for ', info.name);
+        throw (e);
+    }
 }
 
 function findEntrypointFile(moduleName, files) {
@@ -186,7 +203,7 @@ function getExplicitDependencies(info) {
 function extractCoreObjects(info, cb) {
     info.codeManagerConfig = extractCodeManagerConfig.call(this, info.files);
     info.entrypointFile = findEntrypointFile.call(this, info.name, info.files);
-    info.entrypointAST = extractEntrypointAST.call(this, info.entrypointFile);
+    info.entrypointAST = extractEntrypointAST.call(this, info);
     info.libraryInvocations = findLibraryInvocations.call(this, info.entrypointAST);
     info.moduleDefinitionASTs = extractModuleDefinitionASTs.call(this, info.entrypointAST);
     info.moduleConfigASTs = extractModuleConfigASTs.call(this, info.entrypointAST);

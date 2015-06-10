@@ -101,8 +101,3 @@
 //     // imports: {
 //     //     'creative:carousel' : ['carousel-item']
 //     // }
-// });
-
-// // document.addEventListener('keydown', function(e) {
-// //     console.log('yolo'); // keyevents only seem to work when adding them straight to the window
-// // });
