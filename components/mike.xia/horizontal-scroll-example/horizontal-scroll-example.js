@@ -3,7 +3,7 @@ BEST.scene('mike.xia:horizontal-scroll-example', {
         '$self': {
         },
         '.scroll-view' : {
-            'direction' : 'vertical',
+            'direction' : 'horizontal',
             'item-sizes' : function(tweetCount, tweetSize) {
                 var sizes = [];
                 for(var i=0; i<tweetCount; i++) {
