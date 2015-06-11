@@ -1,4 +1,4 @@
-BEST.module('mike.xia:carousel-item', {
+FamousFramework.module('mike.xia:carousel-item', {
     behaviors: {
         '$self' : {
           'size' : '[[identity|containerSize]]',

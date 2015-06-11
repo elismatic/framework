@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:horizontal-scroll-example', {
+FamousFramework.scene('mike.xia:horizontal-scroll-example', {
     behaviors: {
         '$self': {
         },

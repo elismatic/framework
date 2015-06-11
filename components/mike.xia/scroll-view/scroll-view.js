@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:scroll-view', {
+FamousFramework.scene('mike.xia:scroll-view', {
     behaviors: {
         '$self' : {
           style : function(direction) {

@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:grid-view', {
+FamousFramework.scene('mike.xia:grid-view', {
     behaviors: {
         '$self' : {
         },

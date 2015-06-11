@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:carousel', {
+FamousFramework.scene('mike.xia:carousel', {
     behaviors: {
         '.scroll-item' : {
           //creates arbitrary views that could contain anything

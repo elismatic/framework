@@ -1,4 +1,4 @@
-BEST.scene('mike.xia:number-pad', {
+FamousFramework.scene('mike.xia:number-pad', {
     behaviors: {
         '.item': {
             'size': [50, 50],
