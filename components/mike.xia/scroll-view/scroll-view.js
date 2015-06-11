@@ -11,13 +11,10 @@ FamousFramework.scene('mike.xia:scroll-view', {
         '.item' : {
           'position' : function(direction, $index, itemSizes) {
             var sizeIndex = (direction === 'horizontal' ? 0 : 1);
-            console.log(sizeIndex);
             var position = [0, 0, 0];
             for(var i=0; i<$index; i++) {
-              var itemSize = itemSizes[i];
-              position[sizeIndex] += itemSize ? itemSize[sizeIndex] : 0;
+              position[sizeIndex] += itemSizes[i] ? itemSizes[i][sizeIndex] : 0;
             }
-            console.log(direction, position);
             return position;
           },
           '$yield' : '.scroll-view-item'
@@ -31,7 +28,9 @@ FamousFramework.scene('mike.xia:scroll-view', {
         },
         '.item' : {
           'size-change' : function($state, $payload, $index) {
-            console.log($payload, $index);
+            //BUG $index is always max index.
+            console.log('scroll-view got item size-change', $index, $payload)
+            // $state.set(['itemSizes', $index], $payload)
           }
         }
     },
@@ -39,5 +38,5 @@ FamousFramework.scene('mike.xia:scroll-view', {
       'direction' : 'horizontal',
       'itemSizes' : []
     },
-    tree: 'scroll-view.jade'
+    tree: `<node class="item"></node>`
 });

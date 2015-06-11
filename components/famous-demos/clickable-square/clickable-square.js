@@ -27,10 +27,10 @@ FamousFramework.scene('famous-demos:clickable-square', {
      */
     behaviors: {
         '$self': {
-            'size': [400, 400],
-            'align': [0.5, 0.5],
-            'origin': [0.5, 0.5],
-            'mount-point': [0.5, 0.5],
+            'size': '[[identity|squareSize]]',
+            'align': '[[identity|squareAlign]]',
+            'origin': '[[identity|squareOrigin]]',
+            'mount-point' : '[[identity|squareMountPoint]]',
             'rotation-z': function(angle) {
                 return angle;
             },
@@ -62,6 +62,11 @@ FamousFramework.scene('famous-demos:clickable-square', {
      *      plus the current numberOfClicks state.
      */
     events: {
+        $public : {
+            'square-size' : '[[setter|camel]]',
+            'square-mount-point' : '[[setter|camel]]',
+            'square-align' : '[[setter|camel]]'
+        },
         '$self': {
             'click': function($state) {
                 $state.set('numberOfClicks', 1 + $state.get('numberOfClicks'));
@@ -77,8 +82,12 @@ FamousFramework.scene('famous-demos:clickable-square', {
      *      The numberOfClicks state is 0.
      */
     states: {
+        squareSize : [400, 400],
         numberOfClicks: 0,
         angle: 0,
+        squareAlign : [0.5, 0.5],
+        squareOrigin : [0.5, 0.5],
+        squareMountPoint : [0.5, 0.5],
         logoRotation: 0
     },
     tree: `

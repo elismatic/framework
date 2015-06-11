@@ -1,19 +1,13 @@
 FamousFramework.scene('mike.xia:grid-view', {
     behaviors: {
         '$self' : {
+            size : '[[identity|gridSize]]'
         },
         '.item' : {
-          'position' : function(dimension, $index) {
+          'position' : function(dimension, itemSize, $index) {
             var row = Math.floor($index/dimension[0]);
-            // var sizeIndex = (direction === 'horizontal' ? 0 : 1);
-            // console.log(sizeIndex);
-            // var position = [0, 0, 0];
-            // for(var i=0; i<$index; i++) {
-            //   var itemSize = itemSizes[i];
-            //   position[sizeIndex] += itemSize ? itemSize[sizeIndex] : 0;
-            // }
-            // console.log(direction, position);
-            // return position;
+            var column = $index%dimension[0];
+            return [column * itemSize[0], row * itemSize[1], 0];
           },
           '$yield' : '.grid-view-item'
         }
@@ -21,11 +15,19 @@ FamousFramework.scene('mike.xia:grid-view', {
     events: {
         $public : {
           'dimension' : '[[setter]]',
-           
+          'grid-size' : '[[setter|camel]]',
+          'item-size' : '[[setter|camel]]'
+        },
+        '$self' : {
+            'size-change' : function($state, $payload) {
+                console.log($payload);
+            }
         }
     },
     states: {
-      'dimension' : [4, 4]
+      'dimension' : [0, 0],
+      'itemSize' : [0, 0],
+      'gridSize' : [0, 0]
     },
-    tree: 'grid-view.jade'
+    tree : `<node class="item"></node>`
 });
