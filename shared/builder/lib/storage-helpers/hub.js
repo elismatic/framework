@@ -2,6 +2,7 @@
 
 var Async = require('async');
 var Chalk = require('chalk');
+var FormData = require('form-data'); // Hacked version of this lib that doesn't 'basename' the filepath
 var Lodash = require('lodash');
 var Path = require('path');
 var Request = require('request');
@@ -16,9 +17,44 @@ var AUTH_TOKEN_HEADER_NAME = 'X-AUTHENTICATION-TOKEN';
 var AUTH_STATUS_IS_SIGNED_IN_CODE = 204;
 var FAMOUS_USER_ID_HEADER_NAME = 'x-famous-user-id';
 
-function loadDependencies(assetReadHost, dependenciesWanted, dependenciesFound, cb) {
-    // TODO
-    cb(null, dependenciesWanted, dependenciesFound);
+function loadDependency(assetReadHost, versionInfoHost, dependencyTuple, cb) {
+    var dependencyName = dependencyTuple[0];
+    var dependencyVersion = dependencyTuple[1];
+    if (versionInfoHost) {
+        var dependencyParcelBaseURL = PathingHelpers.buildVersionInfoURL.call(this, dependencyName, dependencyVersion);
+        var dependencyParcelURL = dependencyParcelBaseURL + '/assets/' + this.options.parcelAssetPath;
+        Request({
+            method: 'GET',
+            uri: dependencyParcelURL
+        }, function(parcelLoadErr, parcelResp, parcelBody) {
+            if (!parcelLoadErr) {
+                var parcelHash = JSON.parse(parcelBody);
+                cb(null, parcelHash);
+            }
+            else {
+                cb(parcelLoadErr);
+            }
+        });
+    }
+    else {
+        cb(new Error('No such dependency'));
+    }
+}
+
+function loadDependencies(assetReadHost, versionInfoHost, dependenciesWanted, dependenciesFound, cb) {
+    var refTuples = Lodash.pairs(dependenciesWanted);
+    Async.map(refTuples, loadDependency.bind(this, assetReadHost, versionInfoHost), function(depLoadErr, parcelsLoaded) {
+        if (!depLoadErr) {
+            for (var i = 0; i < parcelsLoaded.length; i++) {
+                var loadedDependencyName = refTuples[i][0];
+                dependenciesFound[loadedDependencyName] = parcelsLoaded[i];
+            }
+            cb(null, dependenciesWanted, dependenciesFound);
+        }
+        else {
+            cb(null, dependenciesWanted, dependenciesFound);
+        }
+    });
 }
 
 function derefDependency(refTuple, cb) {
@@ -44,11 +80,11 @@ function derefDependency(refTuple, cb) {
             if (!reqErr && response.statusCode < 300) {
                 var parsedBody = JSON.parse(body);
                 var versionRefFound = parsedBody.version.ref;
-                console.log(Chalk.gray('famous'), Chalk.green('ok'), 'Resolved ' + depName + '~>' + refTuple[1] + ' to ' + depName + '~>' + versionRefFound);
+                console.log(Chalk.gray('famous'), Chalk.green('ok'), 'Resolved ' + depName + ' ~> ' + refTuple[1] + ' to ' + depName + ' ~> ' + versionRefFound);
                 cb(null, [depName, versionRefFound]);
             }
             else {
-                console.warn(Chalk.gray('famous'), Chalk.yellow('warn'), 'Couldn\'t resolve ' + depName + '~>' + refTuple[1]);
+                console.warn(Chalk.gray('famous'), Chalk.yellow('warn'), 'Couldn\'t resolve ' + depName + ' ~> ' + refTuple[1]);
                 cb(new Error('Error resolving dependency for `' + depName + '` (' + refTuple[1] + '); contining...'), refTuple);
             }
         });
@@ -136,7 +172,7 @@ function getBlockNameWithoutUsername(name) {
     return nameTail.join(this.options.componentDelimiter);
 }
 
-function createVersionWithFiles(moduleName, config, files, cb) {
+function createVersionWithFiles(blockId, config, files, cb) {
     // Example of this request in curl:
     // -X POST
     // -F files[]="@./path/to/file_1;filename=relative/path/for/remote/storage/file_1;type=content/type"
@@ -144,7 +180,7 @@ function createVersionWithFiles(moduleName, config, files, cb) {
     // -H 'X-FAMOUS-USER-ID: :user_id'
     var versionPostRequest = Request({
         method: PathingHelpers.getVersionCreateMethod.call(this),
-        uri: PathingHelpers.getVersionCreateURI.call(this, moduleName),
+        uri: PathingHelpers.getVersionCreateURI.call(this, blockId),
         headers: buildRequestHeaders(config)
     }, function(versionCreateErr, versionResp) {
         if (!versionCreateErr && versionResp.statusCode < 300) {
@@ -157,7 +193,17 @@ function createVersionWithFiles(moduleName, config, files, cb) {
 
     // The code manager service expects the files to be uploaded via multipart/form-data,
     // so we have to do this setup so that the request is in the correct format
-    var versionPostForm = versionPostRequest.form();
+    var versionPostForm = new FormData();
+    versionPostForm.on('error', function(err) {
+        err.message = 'form-data: ' + err.message;
+        self.emit('error', err);
+        self.abort();
+    });
+
+    // Hack to associate the special FormData lib we've created to the form instance
+    // we already created above
+    versionPostRequest._form = versionPostForm;
+
     Lodash.each(files, function(file) {
         versionPostForm.append('files[]', file.content, {
             filename: file.path,
@@ -166,21 +212,51 @@ function createVersionWithFiles(moduleName, config, files, cb) {
     }.bind(this));
 }
 
+function createBlockIfNeeded(name, info, cb) {
+    var config = info.codeManagerConfig;
+    var block = info.frameworkInfo.block;
+    if (block && block.id) {
+        cb(null, {
+            block: {
+                id: block.id,
+                name: block.name
+            }
+        });
+    }
+    else {
+        Request({
+            json: true,
+            method: PathingHelpers.getBlockCreateMethod.call(this),
+            uri: PathingHelpers.buildBlockCreateURI.call(this),
+            body: { block: { name: name, 'public': ARE_BLOCKS_PUBLIC } },
+            headers: buildRequestHeaders(config)
+        }, function(blockCreateReqErr, blockInfo) {
+            if (!blockCreateReqErr) {
+                cb(null, blockInfo.body);
+            }
+            else {
+                cb(blockCreateReqErr);
+            }
+        });
+    }
+}
+
 function saveAssets(versionWriteHost, info, cb) {
     var config = info.codeManagerConfig;
     authenticateAsWriteable.call(this, info, config, function(authErr, isWriteable, userInfo) {
         if (isWriteable) {
             var blockNameWithUsername = info.name;
             var blockNameWithoutUsername = getBlockNameWithoutUsername.call(this, info.name);
-            Request({
-                json: true,
-                method: PathingHelpers.getBlockCreateMethod.call(this),
-                uri: PathingHelpers.buildBlockCreateURI.call(this),
-                body: { block: { name: blockNameWithoutUsername, 'public': ARE_BLOCKS_PUBLIC } },
-                headers: buildRequestHeaders(config)
-            }, function(blockCreateErr, blockInfo) {
+            createBlockIfNeeded.call(this, blockNameWithoutUsername, info, function(blockCreateErr, blockInfo) {
+
+                // We need to store the block ID so that we can save it with the
+                // rest of the user's dependencies
+                info.frameworkInfo.block = {
+                    id: blockInfo.block.id
+                };
+
                 if (!blockCreateErr) {
-                    createVersionWithFiles.call(this, blockNameWithUsername, config, info.assetSaveableFiles, function(versionCreateErr, versionCreateResponse) {
+                    createVersionWithFiles.call(this, blockInfo.block.id, config, info.assetSaveableFiles, function(versionCreateErr, versionCreateResponse) {
 
                         if (!versionCreateErr) {
                             var parsedVersionBody = JSON.parse(versionCreateResponse.body);
@@ -199,6 +275,7 @@ function saveAssets(versionWriteHost, info, cb) {
                 else {
                     cb(blockCreateErr);
                 }
+
             }.bind(this));
         }
         else {
@@ -222,6 +299,19 @@ function saveBundle(versionWriteHost, info, cb) {
                 path: this.options.parcelAssetPath,
                 content: JSON.stringify(info.parcelHash, null, 4)
             });
+            bundleFiles.push({
+                path: this.options.bundleExecutableAssetPath,
+                content: info.bundleExecutableString
+            });
+            bundleFiles.push({
+                path: this.options.frameworkLibraryAssetPath,
+                content: info.frameworkLibraryString
+            });
+            bundleFiles.push({
+                path: this.options.frameworkExecutablePageAssetPath,
+                content: info.frameworkExecutablePageString
+            });
+            bundleFiles = bundleFiles.concat(info.assetSaveableFiles);
 
             // Since code manager is essentially a wrapper service over git, there's no way
             // to append files to an existing version, which means that after we've
@@ -235,6 +325,7 @@ function saveBundle(versionWriteHost, info, cb) {
                     info.bundleVersionRef = bundleVersionRef;
                     info.bundlePath = PathingHelpers.buildAssetPath.call(this, info.name, bundleVersionRef, this.options.bundleAssetPath, true);
                     info.bundleURL = PathingHelpers.buildAssetURL.call(this, info.name, bundleVersionRef, this.options.bundleAssetPath);
+                    // info.bundleExecutablePageURL = PathingHelpers.buildAssetURL.call(this, info.name, bundleVersionRef, this.options.frameworkExecutablePageAssetPath);
                     info.parcelPath = PathingHelpers.buildAssetPath.call(this, info.name, bundleVersionRef, this.options.parcelAssetPath, true);
                     info.parcelURL = PathingHelpers.buildAssetURL.call(this, info.name, bundleVersionRef, this.options.parcelAssetPath);
                     cb(null, info);

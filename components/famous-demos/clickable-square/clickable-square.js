@@ -1,4 +1,4 @@
-BEST.scene('famous-demos:clickable-square', {
+FamousFramework.scene('famous-demos:clickable-square', {
     /**
      * Behaviors:
      *      Target the square in our tree
@@ -31,11 +31,6 @@ BEST.scene('famous-demos:clickable-square', {
             'align': [0.5, 0.5],
             'origin': [0.5, 0.5],
             'mount-point': [0.5, 0.5],
-            template: function(numberOfClicks) {
-                return {
-                    clickCount: numberOfClicks
-                };
-            },
             'rotation-z': function(angle) {
                 return angle;
             },
@@ -50,6 +45,9 @@ BEST.scene('famous-demos:clickable-square', {
             },
             'unselectable': true
         },
+        'div' : {
+            'text-content': '[[identity|numberOfClicks]]'
+        }
     },
     /**
      * Events:
@@ -80,9 +78,12 @@ BEST.scene('famous-demos:clickable-square', {
      */
     states: {
         numberOfClicks: 0,
-        angle: 0
+        angle: 0,
+        logoRotation: 0
     },
     tree: `
-        <h1>{{clickCount}}</h1>
+        <div></div>
     `
 });
+
+

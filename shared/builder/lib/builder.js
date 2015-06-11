@@ -17,6 +17,7 @@ function Builder(options) {
     this.loadDependencies = require('./build-steps/load-dependencies').bind(this);
     this.preprocessFiles = require('./build-steps/preprocess-files').bind(this);
     this.saveAssets = require('./build-steps/save-assets').bind(this);
+    this.saveFrameworkInfo = require('./build-steps/save-framework-info').bind(this);
     this.saveBundle = require('./build-steps/save-bundle').bind(this);
 }
 
@@ -80,7 +81,10 @@ Builder.DEFAULTS = {
         '.famous/.config': true // This file may contain user secrets
     },
     bundleAssetPath: '~bundles/bundle.js', // Complete file that the client knows how to process
+    bundleExecutableAssetPath: '~bundles/bundle-executable.js', // File that includes an 'execute' block (will not work with `deploy`!)
     parcelAssetPath: '~bundles/parcel.json', // Data and dependencies object used for dependency gathering
+    frameworkLibraryAssetPath: '~bundles/famous-framework.js',
+    frameworkExecutablePageAssetPath: '~bundles/bundle-executable.html',
     defaultDependencyData: undefined,
     doLoadDependenciesFromBrowser: IS_IN_BROWSER,
     doSkipAssetSaveStep: false,
@@ -148,7 +152,7 @@ Builder.DEFAULTS = {
     behaviorSetterRegex: /^\[\[[\w|\|]+\]\]$/,
     componentDelimiter: ':', // e.g. my:great:module
     componentDelimiterRegexp: /:/g,
-    configMethodIdentifier: 'config', // e.g. BEST.scene(...).config({...})
+    configMethodIdentifier: 'config', // e.g. FamousFramework.scene(...).config({...})
     defaultExtends: ['famous:core:node'],
     defaultImports: {
         'famous:core': [
@@ -181,22 +185,22 @@ Builder.DEFAULTS = {
             'wheel'
         ]
     },
-    dependenciesFilename: '.famous/framework-dependencies.json',
-    dependenciesKeyName: 'dependencies', // e.g. BEST.scene(...).config({dependencies:{...}})
+    frameworkFilename: '.famous/framework.json',
+    dependenciesKeyName: 'dependencies', // e.g. FamousFramework.scene(...).config({dependencies:{...}})
     dependencyBlacklist: { 'localhost': true },
     dependencyRegexp: /([\w-_.]+:)+(([\w-_.]+(?=[\s|>|\/]))|([\w-_.]+(?=:)))/ig,
     entrypointExtnames: { '.js': true },
     eventsFacetKeyName: 'events',
-    importsKeyName: 'imports', // e.g. BEST.scene(...).config({imports:{...}})
-    indexOfModuleNameArgument: 0, // e.g. BEST.scene('THIS STRING', {...})
-    indexOfModuleDefinitionArgument: 1, // e.g. BEST.scene('foo'. {THIS OBJECT})
-    indexOfModuleConfigArgument: 0, // e.g. BEST.scene(...).config({THIS OBJECT})
+    importsKeyName: 'imports', // e.g. FamousFramework.scene(...).config({imports:{...}})
+    indexOfModuleNameArgument: 0, // e.g. FamousFramework.scene('THIS STRING', {...})
+    indexOfModuleDefinitionArgument: 1, // e.g. FamousFramework.scene('foo'. {THIS OBJECT})
+    indexOfModuleConfigArgument: 0, // e.g. FamousFramework.scene(...).config({THIS OBJECT})
     libraryInvocationIdentifiers: {
-        'module': true, // BEST.module(...) // All these are equivalent on the client
-        'component': true, // BEST.component(...)
-        'scene': true // BEST.scene(...)
+        'module': true, // FamousFramework.module(...) // All these are equivalent on the client
+        'component': true, // FamousFramework.component(...)
+        'scene': true // FamousFramework.scene(...)
     },
-    libraryMainNamespace: 'BEST',
+    libraryMainNamespace: 'FamousFramework',
     moduleCDNRegexp: /\{\{@CDN_PATH(\|)?(([a-zA-Z0-9\:\.-])?)+\}\}/ig,
     passThroughKey: '$pass-through',
     reservedEventValues: {},
@@ -228,6 +232,7 @@ Builder.prototype.buildModule = function(info, finish) {
         // an 'explicitVersion' set, since only saving assets
         // can give us the version ref for the component.
         subRoutines.push(this.saveAssets.bind(this));
+        subRoutines.push(this.saveFrameworkInfo.bind(this));
     }
     subRoutines.push(this.expandSyntax);
     subRoutines.push(this.buildBundle);

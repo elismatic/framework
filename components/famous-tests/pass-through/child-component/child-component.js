@@ -1,4 +1,4 @@
-BEST.module('famous-tests:pass-through:child-component', {
+FamousFramework.module('famous-tests:pass-through:child-component', {
     behaviors: {
         '#el' : {
             size: [400, 100],
@@ -10,7 +10,7 @@ BEST.module('famous-tests:pass-through:child-component', {
     },
     events: {
         '$pass-through' : {
-            '#view' : ['position'],
+            '#view' : {'position-view-node' : 'position'},
             '#el' : ['content']
         }
     },

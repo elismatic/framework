@@ -1,4 +1,4 @@
-BEST.scene('famous-tests:static-assets', {
+FamousFramework.scene('famous-tests:static-assets', {
     behaviors: {
         '#one-a': {
             'content': '<img src="{{@assets/excite.png}}"><p style="color:white;">You should see several images on this page, showing that assets can be loaded/referenced in a variety of ways</p>'
@@ -25,12 +25,10 @@ BEST.scene('famous-tests:static-assets', {
             'position': [0, 600]
         },
         '#four': {
-            'template': function(imageFourPath) {
-                return {
-                    imageFourPath: imageFourPath
-                }
-            },
             'position': [400, 300]
+        },
+        '#img-four' : {
+            src: '[[identity|imageFourPath]]'
         }
     },
     states: {
@@ -46,7 +44,7 @@ BEST.scene('famous-tests:static-assets', {
         <node id="two"></node>
         <node id="three"></node>
         <node id="four">
-            <img src="{{imageFourPath}}">
+            <img id='img-four'>
         </node>
     `,
 });

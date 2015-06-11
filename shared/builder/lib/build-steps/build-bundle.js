@@ -1,18 +1,14 @@
 'use strict';
 
+var Fs = require('fs');
 var Lodash = require('lodash');
 var Path = require('path');
 
 var BuildHelpers = require('./../build-helpers');
 var EsprimaHelpers = require('./../esprima-helpers');
-var PathingHelpers = require('./../storage-helpers/pathing');
 
-var CLOSE_ARRAY = ']';
-var COMMA = ',';
 var NEWLINE = '\n';
 var NEWLINE_REGEXP = /\n/g;
-var OPEN_ARRAY = '[';
-var QUOTE = '\'';
 var TAB = '    '; // 4 spaces!
 
 function indent(str) {
@@ -44,7 +40,7 @@ function getFlatIncludes(flatIncludes, parcelHash) {
 function buildIncludesPrefix(info) {
     var parcelHash = info.parcelHash;
     var flatIncludes = getFlatIncludes([], parcelHash);
-    return 'BEST.includes("' + info.name + '","' + (info.explicitVersion || info.versionRef) + '",' + JSON.stringify(flatIncludes) + ',function(){';
+    return 'FamousFramework.includes("' + info.name + '","' + (info.explicitVersion || info.versionRef) + '",' + JSON.stringify(flatIncludes) + ',function(){';
 }
 
 function getFlatRegistrations(flatRegistrations, alreadyRegistered, parcelHash) {
@@ -63,7 +59,8 @@ function getFlatRegistrations(flatRegistrations, alreadyRegistered, parcelHash) 
     return flatRegistrations;
 }
 
-function buildRegistrationBlocks(parcelHash) {
+function buildRegistrationBlocks(info) {
+    var parcelHash = info.parcelHash;
     var flatRegistrations = getFlatRegistrations([], {}, parcelHash);
     // Remove duplicates from the registration blocks we got.
     // No point in registering them multiple times!
@@ -78,9 +75,34 @@ function buildRegistrationBlocks(parcelHash) {
         }
     }
     var flatEntrypoints = Lodash.map(uniqRegistrations, function(regObj) {
-        return regObj.entrypoint;
+        if (regObj.name === info.name) {
+            return regObj.entrypoint;
+        }
+        else {
+            // This AWFUL HACK is to correct a sort of 'off-by-one' error wherein the BUNDLE
+            // contents we want to load actually point to a previously established VERSION
+            // that we previously saved in code manager
+            var origEntrypoint = regObj.entrypoint;
+            var versionRefTheyHave = regObj.version;
+            var versionRefWeHave = info.dereffedDependencyTable[regObj.name];
+
+            // HACK If for some reason we don't have a verion ref for this item, we pretty
+            // much have no choice but to fall back to the original without the swap we
+            // would normally do above
+            if (versionRefWeHave) {
+                var newEntrypoint = origEntrypoint.split(versionRefTheyHave).join(versionRefWeHave);
+                return newEntrypoint;
+            }
+            else {
+                return origEntrypoint;
+            }
+        }
     });
     return flatEntrypoints.join(NEWLINE);
+}
+
+function buildExecuteBlock(info) {
+    return 'window.onload = function() { FamousFramework.execute("' + info.name + '", "' + info.versionRef + '", "body"); };';
 }
 
 function buildIncludesSuffix() {
@@ -92,7 +114,19 @@ function buildBundleString(info) {
         copyright(),
         '\'use strict\';',
         buildIncludesPrefix(info),
-        indent(buildRegistrationBlocks(info.parcelHash)),
+        indent(buildRegistrationBlocks(info)),
+        buildIncludesSuffix(),
+        copyright()
+    ].join(NEWLINE);
+}
+
+function buildBundleExecutableString(info) {
+     return [
+        copyright(),
+        '\'use strict\';',
+        buildIncludesPrefix(info),
+        indent(buildRegistrationBlocks(info)),
+        indent(buildExecuteBlock(info)),
         buildIncludesSuffix(),
         copyright()
     ].join(NEWLINE);
@@ -142,6 +176,25 @@ function buildParcelHash(info) {
         entrypoint: buildEntrypointString(info)
     };
 }
+/*eslint-disable */
+var PROJECT_DIR = Path.join(__dirname, '..', '..', '..', '..');
+/*eslint-enable */
+
+// TODO we need to make sure we lock this content to whatever version of
+// the framework was used at the given time. Even more ideal, rather than
+// writing this to every bundle folder, we could just template out the
+// 'executable-bundle.html' to point to a version of the library that had
+// been previously CDN'd
+// var FRAMEWORK_LIB_STRING = Fs.readFileSync(Path.join(PROJECT_DIR, 'local', 'workspace', 'build', 'famous-framework.bundle.js'));
+var FRAMEWORK_EXECUTABLE_PAGE_STRING = Fs.readFileSync(Path.join(__dirname, 'templates', 'executable-bundle.html'));
+
+// function getFrameworkLibraryString() {
+//     return FRAMEWORK_LIB_STRING;
+// }
+
+function getFrameworkExecutablePageString() {
+    return FRAMEWORK_EXECUTABLE_PAGE_STRING;
+}
 
 function buildBundle(info, cb) {
     // When building bundles in memory only (no persistence, say, when testing),
@@ -154,6 +207,9 @@ function buildBundle(info, cb) {
 
     info.parcelHash = buildParcelHash.call(this, info);
     info.bundleString = buildBundleString.call(this, info);
+    info.bundleExecutableString = buildBundleExecutableString.call(this, info);
+    info.frameworkLibraryString = '';//getFrameworkLibraryString.call(this, info);
+    info.frameworkExecutablePageString = getFrameworkExecutablePageString.call(this, info);
     cb(null, info);
 }
 

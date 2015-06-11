@@ -26,6 +26,7 @@ var REPEAT_INFO_KEY = 'repeat-info';
 var REPEAT_PAYLOAD_KEY = '$repeatPayload';
 var SET_HTML_KEY = 'set-html';
 var YIELD_KEY = '$yield';
+var ROUTE_KEY = '$route';
 
 function Component(domNode, surrogateRoot, parent) {
     this.name = domNode.tagName.toLowerCase();
@@ -41,7 +42,13 @@ function Component(domNode, surrogateRoot, parent) {
     }
     this.surrogateRoot = surrogateRoot;
     this.tree = new Tree(domNode, this.definition.tree, this.dependencies, parent.tree.rootNode);
-    this.famousNode = FamousConnector.addChild(parent.famousNode);
+
+    var famousNodeConstructorName = DataStore.getModuleOptions(this.name, this.tag).famousNodeConstructorName;
+    var famousNodeConstructor = famousNodeConstructorName ?
+                                    DataStore.getCustomFamousNodeConstructor(famousNodeConstructorName) :
+                                    null;
+    this.famousNode = FamousConnector.addChild(parent.famousNode, famousNodeConstructor);
+
     this.states = new States(this.definition.states);
     this.timelines = new Timelines(this.timelineSpec, this.states);
     this.behaviors = new Behaviors(this.definition.behaviors);
@@ -63,6 +70,7 @@ Component.prototype._initialize = function _initialize() {
     this.events.triggerLifecycleEvent(PRELOAD_KEY, this.uid);
     this._initializeControlFlow();
     this._processDOMMessages();
+    this._processRoute();
     this._runBehaviors();
     this._executeAttachments();
     this.events.initializeDescendantEvents(this.tree.getExpandedBlueprint(), this.uid);
@@ -84,7 +92,9 @@ Component.prototype._createExpandedBlueprintObserver = function _createExpandedB
             // Record newly added node UIDs
             if (mutation.addedNodes.length > 0) {
                 for (var j = 0; j < mutation.addedNodes.length; j++) {
-                    addedNodesUIDs.push(VirtualDOM.getUID(mutation.addedNodes[j]));
+                    if (VirtualDOM.isValidHTMLElement(mutation.addedNodes[j])) {
+                        addedNodesUIDs.push(VirtualDOM.getUID(mutation.addedNodes[j]));
+                    }
                 }
             }
         }
@@ -97,6 +107,7 @@ Component.prototype._createExpandedBlueprintObserver = function _createExpandedB
     });
     this._observer.observe(expandedBlueprint, {childList: true, subtree: true});
 };
+
 
 Component.prototype._processDOMMessages = function _processDOMMessages() {
     var node = this.getRootNode();
@@ -119,6 +130,11 @@ Component.prototype._processDOMMessages = function _processDOMMessages() {
     this.states.set(REPEAT_PAYLOAD_KEY, repeatPayload);
 
     this.tree.stripExpandedBlueprintMessages();
+};
+
+Component.prototype._processRoute = function _processRoute() {
+    // turns http://localhost:1618/?ff=famous-tests%3Arouter-test/home/page1 -> /home/page1
+    this.states.set(ROUTE_KEY, '/' + window.location.href.split('/').slice(4).join('/'));
 };
 
 Component.prototype._runBehaviors = function _runBehaviors(runControlFlow, blackList) {
@@ -162,6 +178,7 @@ Component.prototype._executeAttachments = function _executeAttachments() {
     }
 };
 
+
 /*-----------------------------------------------------------------------------------------*/
 // Events & EventHandlers
 /*-----------------------------------------------------------------------------------------*/
@@ -184,12 +201,6 @@ Component.prototype._handleBehaviorUpdate = function _handleBehaviorUpdate(behav
 
 Component.prototype._initializeControlFlow = function _initializeControlFlow() {
     var blueprint = this.tree.getBlueprint();
-
-    // Remove valid HTML that may be included in a component's blueprint.
-    // Those nodes should not be processed via the control flow conduit; they
-    // should be set as content on the Famous Node's DOMElement.
-    var htmlElements = VirtualDOM.stripHTMLElements(blueprint);
-
     var expandedBlueprint = ControlFlow.initializeSelfContainedFlows(
         blueprint, this.uid, this.controlFlowDataMngr
     );
@@ -204,25 +215,13 @@ Component.prototype._initializeControlFlow = function _initializeControlFlow() {
     }
     else {
         var childrenRoot = VirtualDOM.clone(expandedBlueprint);
-        var parentInsertedHTMLElements = this.surrogateRoot ? VirtualDOM.stripHTMLElements(this.surrogateRoot) : [];
-
         ControlFlow.initializeParentDefinedFlows(
             expandedBlueprint, childrenRoot, this.surrogateRoot, this.controlFlowDataMngr
         );
-
-        // HTML Content from blueprint is overwritten by HTML content injected by parent.
-        if (VirtualDOM.doNodesHaveContent(parentInsertedHTMLElements)) {
-            htmlElements = parentInsertedHTMLElements;
-        }
         this._updateChildren(childrenRoot);
     }
 
     VirtualDOM.removeAttribute(this.getRootNode(), CONTROL_FLOW_ACTION_KEY);
-
-    // Set DOMELement content
-    if (VirtualDOM.doNodesHaveContent(htmlElements)) {
-        this._setHTMLContent(htmlElements);
-    }
 };
 
 // The children root has a mix of HTML and Framework Components. The HTML needs
@@ -232,12 +231,32 @@ Component.prototype._updateChildren = function _updateChildren(childrenRoot) {
     var self = this;
     this.tree.setChildrenRoot(childrenRoot);
     var baseNode;
-    var childComponent;
+    var domElements = [];
     this.tree.eachChild(function(node) {
-        baseNode = VirtualDOM.clone(node);
-        VirtualDOM.removeChildNodes(baseNode);
-        createChild(baseNode, node, self);
+        if (VirtualDOM.isValidHTMLElement(node)) {
+            domElements.push(node);
+        }
+        else {
+            // process Framework component
+            baseNode = VirtualDOM.clone(node);
+            VirtualDOM.removeChildNodes(baseNode);
+            return new Component(baseNode, node, self);
+        }
     });
+
+    if (domElements.length) {
+        self._attachDOMWrapper(domElements);
+    }
+};
+
+Component.prototype._attachDOMWrapper = function _attachDOMWrapper(domNodes) {
+    var wrapperNode = FamousConnector.addChild(this.famousNode);
+    var content = '';
+    for (var i = 0; i < domNodes.length; i++) {
+        content += domNodes[i].outerHTML;
+    }
+    var famousDomElement = FamousConnector.attachDOMElement(wrapperNode, content);
+    DataStore.registerDOMWrapper(this.uid, famousDomElement);
 };
 
 Component.prototype._setHTMLContent = function _setHTMLContent(htmlElements) {
@@ -317,10 +336,6 @@ Component._processControlFlowMessage = function _processControlFlowMessage(node,
 /*-----------------------------------------------------------------------------------------*/
 // Public methods
 /*-----------------------------------------------------------------------------------------*/
-
-function createChild(domNode, surrogateRoot, parent) {
-    return new Component(domNode, surrogateRoot, parent);
-}
 
 Component.prototype.sendMessage = function sendMessage(key, message) {
     this.events.sendMessage(key, message, this.uid);

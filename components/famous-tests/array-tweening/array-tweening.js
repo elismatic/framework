@@ -1,4 +1,4 @@
-BEST.scene('famous-tests:array-tweening', {
+FamousFramework.scene('famous-tests:array-tweening', {
     behaviors: {
         '#square': {
             'position': '[[identity|position]]',
@@ -33,7 +33,7 @@ BEST.scene('famous-tests:array-tweening', {
     },
     tree: `
         <node id="square">
-            Click here to see example of tweening array values!
+            <div>Click here to see example of tweening array values!</div>
         </node>
     `
 });

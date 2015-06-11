@@ -1,39 +1,50 @@
-BEST.scene('creative:twitter:tweet', {
+FamousFramework.scene('creative:twitter:tweet', {
     behaviors: {
         '.tweet': {
-            'size-absolute-y': (sizeY) => {
-                //'[[identity|sizeY]]',
-                return sizeY;
-            },
-
+            'size-absolute-y': '[[identity|sizeY]]',
+            'position-z': '[[identity|positionZ]]',
             'position-y': '[[identity|positionY]]',
-            styles: {
-                'padding': '10px 12px 5px 70px',
-                'border-bottom': '1px solid rgb(229, 235, 239)'
+            style: (positionZ) => {
+                return {
+                    'padding': '10px 12px 5px 70px',
+                    'border-bottom': '1px solid rgb(229, 235, 239)',
+                    'z-index': positionZ
+                }
             },
-             'template': (model) => {
-                 return {
-                     userImage: '{{@CDN_PATH}}' + model.imageURL,
-                     displayName: model.displayName,
-                     userName: model.userName,
-                     tweetContent: model.tweetContent,
-                     tweetImage: '{{@CDN_PATH}}' + model.tweetImage,
-                     tweetAge: model.tweetAge,
-                     retweets: model.retweets,
-                     favorites: model.favorites
-                 };
-             }
+            'template': (model) => {
+                /*{
+                     imageURL:
+                     displayName:
+                     userName:
+                     tweetContent:
+                     tweetImage:
+                     tweetAge:
+                     retweets:
+                     favorites:
+                 }*/
+
+                console.log('template pre',model.imageURL);
+
+                if(model.hasOwnProperty('imageURL')) {
+                    model.tempImageURL = '{{@CDN_PATH}}' + model.imageURL;
+                }//TODO: bug
+
+                if(model.hasOwnProperty('tweetImage')) {
+                    model.tempTweetImage = '{{@CDN_PATH}}' + model.tweetImage;
+                }//TODO: bug
+
+                return model;
+            }
         }
     },
     events: {
         '$public': {
-            'sizeY': '[[setter]]',
+            'sizeY':     '[[setter]]',
             'positionY': '[[setter]]',
-            'model': '[[setter]]'
-        },
-        '$pass-through' : {
-            '.tweet-view' : {
-                'position-my-tweet' : 'position'
+            'positionZ': '[[setter]]',
+            'model': function($state, $payload) {
+                console.log('EVENT IN PUBLIC CB');
+                $state.set('model', $payload);
             }
         }
     },

@@ -1,8 +1,13 @@
 'use strict';
 
+/*
+ * We aren't actually using true virtual DOM yet, but we plan to incorporate it
+ * in the near future. For now we are simply using a detached DOM tree. TODO
+ */
+
 var UID = require('./../../../utilities/uid');
 
-var BEST_ROOT = document.createElement('best-root');
+var FAMOUS_FRAMEWORK_ROOT = document.createElement('famous-framework-root');
 var COMPONENT_DELIM = ':';
 var DO_CLONE_ATTRIBUTES = true;
 var DOM_PARSER = new DOMParser();
@@ -42,7 +47,7 @@ function create(str) {
 }
 
 function getBaseNode() {
-    return BEST_ROOT;
+    return FAMOUS_FRAMEWORK_ROOT;
 }
  function transferChildNodes(from, to) {
     while (from.childNodes[0]) {
@@ -146,7 +151,7 @@ function assignChildUIDs(parentNode) {
         child = parentNode.children[i];
         if (!isValidHTMLElement(child)) {
             setUID(child);
-            assignChildUIDs(parentNode.children[i]);
+            assignChildUIDs(child);
         }
     }
 }
@@ -184,7 +189,7 @@ function isDescendant(desendant, progenitor) {
 }
 
 function isValidHTMLElement(domNode) {
-    if (domNode.constructor.name === UNKNOWN_ELEMENT_NAME || domNode.nodeType === NODE_TYPE_COMMENT) {
+    if (domNode.constructor.name === UNKNOWN_ELEMENT_NAME || isTextNode(domNode) || domNode.nodeType === NODE_TYPE_COMMENT) {
         return false;
     }
     else {

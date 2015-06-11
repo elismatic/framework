@@ -1,4 +1,4 @@
-BEST.module('famous-demos:styling-inner-content', {
+FamousFramework.module('famous-demos:styling-inner-content', {
     behaviors: {
         'node' : {
             position: [100, 100],
@@ -8,16 +8,16 @@ BEST.module('famous-demos:styling-inner-content', {
                 'border-radius' : '10px',
                 'line-height' : '200px',
                 'text-align' : 'center'
-            },
-            template: function(color, fontFamily) {
-                return {
-                    'link-style' : BEST.helpers.formatStyle({
-                        'color': color,
-                        'font-family': fontFamily,
-                        'font-size' : '30px',
-                        'text-align' : 'center',
-                    })
-                }
+            }
+        },
+        'a' : {
+            'style' : function(color, fontFamily) {
+                return FamousFramework.helpers.formatStyle({
+                    'color': color,
+                    'font-family': fontFamily,
+                    'font-size' : '30px',
+                    'text-align' : 'center',
+                });
             }
         }
     },
@@ -29,7 +29,7 @@ BEST.module('famous-demos:styling-inner-content', {
     },
     tree: `
         <node>
-            <a href="http://www.famous.org" style={{link-style}}>Famo.us</a>
+            <a href="http://www.famous.org">famous.org</a>
         </node>
     `,
 });

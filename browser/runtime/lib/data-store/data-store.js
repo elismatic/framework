@@ -2,16 +2,16 @@
 
 var ObjUtils = require('./../../../utilities/object');
 
-// A BEST Application with a Famo.us Context
+// A FamousFramework Application with a Famo.us Context
 var EXECUTED_COMPONENTS = {};
 
-// A component is an instantiated BEST module.
+// A component is an instantiated FamousFramework module.
 var COMPONENTS = {};
 
 // List of the tagged dependencies of every tagged module.
 var DEPENDENCIES = {};
 
-// A module is a BEST definition.
+// A module is a FamousFramework definition.
 var MODULES = {};
 
 // Config objects
@@ -22,6 +22,17 @@ var TIMELINES = {};
 
 // Attachment objects ('raw code' wrappers)
 var ATTACHMENTS = {};
+
+// Options passed in when registered a Framework Component
+var MODULE_OPTIONS = {};
+
+// Custom Famous Node constructors that can be passed to
+// `addChild` when adding nodes to the scene graph
+var FAMOUS_NODE_CONSTRUCTORS = {};
+
+// Famous Node with DOMElement attached, used to render
+// DOM content from the tree on to the page.
+var DOM_WRAPPER = {};
 
 var BEHAVIORS_KEY = 'behaviors';
 var DEFAULT_TAG = 'HEAD';
@@ -167,10 +178,29 @@ function enhanceModule(name, tag, options, definition) {
     extendDefinition(definition, options[EXTENSION_KEYS]);
 }
 
+function saveModuleOptions(name, tag, options) {
+    if (!MODULE_OPTIONS[name]) {
+        MODULE_OPTIONS[name] = [];
+    }
+    MODULE_OPTIONS[name][tag] = options;
+}
+
+function getModuleOptions(name, tag) {
+    var options = MODULE_OPTIONS[name][tag];
+    if (!options) {
+        console.warn('`' + name + ' (' + tag + ')` ' + 'has not been registered.');
+        return {};
+    }
+    else {
+        return options;
+    }
+}
+
 function registerModule(name, tag, options, definition) {
     if (!hasModule(name, tag)) {
         validateModule(name, tag, options, definition);
         enhanceModule(name, tag, options, definition);
+        saveModuleOptions(name, tag, options);
         return wrapModule(name, tag, saveModule(name, tag, options, definition));
     }
     else {
@@ -197,6 +227,19 @@ function registerComponent(uid, component) {
     else {
         saveComponent(uid, component);
     }
+}
+
+function registerDOMWrapper(uid, wrapper) {
+    if (DOM_WRAPPER[uid]) {
+        throw new Error('DOM Wrapper with UID `' + uid + '` already exists!');
+    }
+    else {
+        DOM_WRAPPER[uid] = wrapper;
+    }
+}
+
+function getDOMWrapper(uid) {
+    return DOM_WRAPPER[uid];
 }
 
 function saveExecutedComponent(selector, component) {
@@ -230,15 +273,36 @@ function getDependencies(name, tag) {
     }
 }
 
+function registerCustomFamousNodeConstructors(constructors) {
+    for (var name in constructors) {
+        FAMOUS_NODE_CONSTRUCTORS[name] = constructors[name];
+    }
+}
+
+function getCustomFamousNodeConstructor(constuctorName) {
+    var Constructor = FAMOUS_NODE_CONSTRUCTORS[constuctorName];
+    if (Constructor) {
+        return Constructor;
+    }
+    else {
+        throw new Error('Famous Node Constructor named `' + name + '` has not been registered');
+    }
+}
+
 module.exports = {
     getAttachments: getAttachments,
     getComponent: getComponent,
     getConfig: getConfig,
     getDependencies: getDependencies,
     getExecutedComponent: getExecutedComponent,
+    getCustomFamousNodeConstructor: getCustomFamousNodeConstructor,
+    getDOMWrapper: getDOMWrapper,
     getModuleDefinition: getModuleDefinition,
+    getModuleOptions: getModuleOptions,
     getTimelines: getTimelines,
     registerComponent: registerComponent,
+    registerCustomFamousNodeConstructors: registerCustomFamousNodeConstructors,
+    registerDOMWrapper: registerDOMWrapper,
     registerModule: registerModule,
     saveDependencies: saveDependencies,
     saveExecutedComponent: saveExecutedComponent,

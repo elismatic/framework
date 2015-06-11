@@ -1,8 +1,6 @@
 'use strict';
 
 var Async = require('async');
-var Lodash = require('lodash');
-var Request = require('request');
 
 var Browser = require('./browser');
 var Extra = require('./extra');
@@ -51,9 +49,10 @@ function loadDependencies(info, cb) {
                 ));
             }
         }
-        if (this.options.codeManagerAssetReadHost) {
+        if (this.options.codeManagerAssetReadHost || this.options.codeManagerVersionInfoHost) {
             loadAttemptActions.push(Hub.loadDependencies.bind(this,
-                this.options.codeManagerAssetReadHost
+                this.options.codeManagerAssetReadHost,
+                this.options.codeManagerVersionInfoHost
             ));
         }
         // After attempting to load the dependencies from all of the
