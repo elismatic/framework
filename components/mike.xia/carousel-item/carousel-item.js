@@ -1,12 +1,12 @@
 BEST.module('mike.xia:carousel-item', {
     behaviors: {
-        '#container' : {
+        '$self' : {
           'size' : '[[identity|containerSize]]',
           'style' : {
             overflow : 'hidden',
             backgroundImage : 'url(https://tedcdnpi-a.akamaihd.net/r/images.ted.com/images/ted/9479c4b2b5b202d0fa1b11e9d3e80ff934f883c0_2880x1620.jpg?w=580&quality=90)'
           },
-
+          'add-class' : ['carousel-item-background'],
           'mount-point' : [0.5, 0.5],
           'align' : [0.5, 0.5],
           'origin' : [0.5, 0.5],
@@ -49,7 +49,7 @@ BEST.module('mike.xia:carousel-item', {
           itemDetailPosition : '[[setter]]',
           itemDescriptionPosition : '[[setter]]'
         },
-        '#container' : {
+        '$self' : {
           'mouseover' : function($state, $payload) {
             var transition = { duration : 350, curve : 'outExpo' };
 

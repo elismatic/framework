@@ -1,38 +1,49 @@
 BEST.scene('mike.xia:scroll-view', {
     behaviors: {
-        '#scroll-container' : {
-          size : function(containerSize) {
-            return containerSize;
-          },
-          overflow : function(direction) {
-            return direction === 'horizontal' ? 'scroll-x' : 'scroll-y';
-          },
+        '$self' : {
+          size : '[[identity|scrollViewSize]]',
+          style : function(direction) {
+            return {
+              'overflow-x' : (direction === 'horizontal' ? 'scroll' : 'hidden'),
+              'overflow-y' : (direction === 'vertical' ? 'scroll' : 'hidden')
+            }
+          }
         },
-        '#scroll-item' : {
-          'position' : function($index) {
-            console.log($index);
-            return [0, 0, 0]
+        '.item' : {
+          'position' : function(direction, $index, itemSizes) {
+            var sizeIndex = (direction === 'horizontal' ? 0 : 1);
+
+            var position = [0, 0, 0];
+            for(var i=0; i<$index; i++) {
+              var itemSize = itemSizes[i];
+              position[sizeIndex] += itemSize ? itemSize[sizeIndex] : 0;
+            }
+            return position;
           },
-          '$yield' : '.scroll-item'
+          '$yield' : '.scroll-view-item'
         }
     },
     events: {
         '$lifecycle': {
             'post-load': function($state) {
-              console.log('LOADED SCROLL-VIEW')
             }
         },
         $public : {
-          // size : '[[setter|container-size]]',
-          'size' : function($state, $payload) {
-            $state.set('containerSize', $payload);
+          'direction' : '[[setter]]',
+          'item-sizes' : '[[setter|camel]]',
+          'item-height' : '[[setter|camel]]',
+          'scroll-view-size' : '[[setter|camel]]'
+        },
+        '.item' : {
+          'size-change' : function($state, $payload, $index) {
+            console.log($payload, $index);
           }
         }
     },
     states: {
-      'direction' : 'vertical',
-      'containerSize' : [100, 500],
-      'itemHeight' : 200
+      'direction' : 'horizontal',
+      'scrollViewSize' : [400, 800],
+      'itemSizes' : []
     },
     tree: 'scroll-view.jade'
 });
