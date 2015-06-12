@@ -70,7 +70,7 @@ FamousFramework.scene('famous-demos:clickable-square', {
         '$self': {
             'click': function($state) {
                 $state.set('numberOfClicks', 1 + $state.get('numberOfClicks'));
-                $state.set('angle', $state.get('angle') + Math.PI/2, {
+                $state.set('angle', $state.get('angle') + Math.PI, {
                     duration: 500,
                     curve: 'outBounce'
                 });

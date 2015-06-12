@@ -3,7 +3,7 @@ FamousFramework.scene('mike.xia:horizontal-scroll-example', {
         '$self': {
         },
         '.scroll-view' : {
-            'direction' : 'horizontal',
+            'direction' : 'vertical',
             'item-sizes' : function(tweetCount, tweetSize) {
                 var sizes = [];
                 for(var i=0; i<tweetCount; i++) {
@@ -23,8 +23,9 @@ FamousFramework.scene('mike.xia:horizontal-scroll-example', {
                 var stuff = []; 
                 for(var i=0; i<tweetCount; i++) {
                     stuff.push({
-                        content : 'Item' + i,
-                        size : tweetSize
+                        'square-size' : tweetSize,
+                        'square-mount-point' : [0, 0],
+                        'square-align' : [0, 0]
                     });
                 }
                 return stuff;
@@ -41,6 +42,7 @@ FamousFramework.scene('mike.xia:horizontal-scroll-example', {
 })
 .config({
     imports: {
-        'mike.xia' : ['scroll-view']
+        'mike.xia' : ['scroll-view'],
+        'famous-demos' : ['clickable-square']
     }
 });

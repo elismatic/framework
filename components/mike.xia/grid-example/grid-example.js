@@ -2,30 +2,13 @@ FamousFramework.scene('mike.xia:grid-example', {
     behaviors: {
         '$self': {
         },
-        '.scroll-view' : {
-            'mount-point' : [0.5, 0.5],
-            'align' : [0.5, 0.5],
-            'direction' : 'vertical',
-            'size' : '[[identity|scrollViewSize]]',
-            'item-sizes' : function(gridCount, gridSize) {
-                var sizes = [];
-                for(var i=0; i<gridCount; i++) {
-                    sizes.push(gridSize);
-                }
-                return sizes;
-            }
-        },
         '.grid-view' : {
+            'align' : [0.5, 0.5],
+            'mount-point' : [0.5, 0.5],
             'grid-size' : '[[identity|gridSize]]',
-            '$repeat' : function(gridCount, itemSize, itemCount) {
-                var grids = [];
-                for(var i=0; i<gridCount; i++) {
-                    grids.push({
-                        'dimension' : [4, Math.ceil(itemCount / 4)],
-                        'item-size' : itemSize
-                    });
-                }
-                return grids;
+            'item-size' : '[[identity|itemSize]]',
+            'dimension' : function(itemCount) {
+                return [4, Math.ceil(itemCount / 4)]
             }
         },
         '.grid-view-item' : {
@@ -54,23 +37,19 @@ FamousFramework.scene('mike.xia:grid-example', {
         }
     },
     states: {
-        gridCount : 5,
-        scrollViewSize : [320, 568],
         gridSize : [320, 320],
         itemCount : 16,
         itemSize : [80, 80]
     }, 
     tree: `
-        <scroll-view class="scroll-view">
-            <grid-view class="grid-view scroll-view-item">
-                <clickable-square class="grid-view-item">
-            </grid-view>
-        </scroll-view>
+        <grid-view class="grid-view">
+            <clickable-square class="grid-view-item">
+        </grid-view>
     `
 })
 .config({
     imports: {
-        'mike.xia' : ['grid-view', 'scroll-view', 'carousel-item'],
+        'mike.xia' : ['grid-view', 'scroll-view', 'carousel-item', 'cat-square'],
         'famous-demos' : ['clickable-square']
     }
 });
