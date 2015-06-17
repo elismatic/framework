@@ -1,4 +1,7 @@
-# Core Concepts
+---
+layout: default
+title: Core Concepts 
+---
 
 At the heart of the Famous Framework lies an architectural pattern we call BEST, which stands for _behavior, event, state, tree_. Let's get familiar with the core concepts of BEST. 
 

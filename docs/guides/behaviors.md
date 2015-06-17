@@ -1,4 +1,7 @@
-# Behaviors
+---
+layout: default
+title: Behaviors 
+---
 
 Behaviors describe how the elements in an application should appear. Behaviors handle everything from controlling size and positioning to adding control flow and dynamic content. By injecting state values into behaviors, we can make them respond to state changes and drive UI updates or tween animations.
 

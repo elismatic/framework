@@ -1,4 +1,7 @@
-# Getting Started
+---
+layout: default
+title: Getting Started
+---
 
 The [Famous Framework](https://github.com/Famous/framework) provides a structured API for controlling UI elements with the Famous Engine. As a framework, its goals are to bring composability, extensibility, and consistency fo UI applications.
 

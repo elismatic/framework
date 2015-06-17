@@ -1,4 +1,7 @@
-# Events
+---
+layout: default
+title: Events
+---
 
 Think of event functions as _state changers_. Their only job is to react to triggers (such as user interactions and program events) and make modifications to the component's state.
 
