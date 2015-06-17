@@ -42,49 +42,6 @@
     states: { rotation: 0 },
     tree: `&lt;node id="box"&gt;&lt;/node&gt;`
 });</code></pre>
-                <h2>
-                    Setup &amp; installation
-                </h2>
-                <p>
-                    Assuming you've already got <a href="http://nodejs.org">Node.js</a> installed on your system, here's how to set up a new Famous Framework project:
-                </p>
-                <pre><code class="markdown"><span style="color:cyan">$</span> npm install -g git://github.com/Famous/famous-cli.git#framework <span style="color:#666"># You may need to 'sudo' this</span>
-<span style="color:cyan">$</span> famous framework-scaffold
-<span style="color:lime">? Enter a username:</span> bobette-smith
-<span style="color:lime">? Enter your component's name:</span> todos
-<span style="color:lime">? Does the project name "bobette-smith:todos" look ok?</span> Yes
-<span style="color:lime">Created framework scaffold in current working directory!</span>
-</code></pre>
-                <p>
-                    Your files and folders should now look something like this:
-                </p>
-                <pre><code class="markdown">├── components
-|   ├── bobette-smith
-|   |   └── todos
-|   |       └── todos.js
-|   └── famous
-|       ├── core
-|       |   └── node
-|       |       └── node.js
-|       └── events
-|           └── events.js
-├── public
-|   └── index.html
-└── package.json</code></pre>
-                <p>
-                    Two more commands to install the necessary libraries and boot up the development server:
-                </p>
-                <pre><code class="markdown"><span style="color:cyan">$</span> npm install
-<span style="color:cyan">$</span> npm run dev</code></pre>
-                <p>
-                    You should now be able to visit <a href="http://localhost:1618">localhost:1618</a> with your browser and see a demo running. Open <code>components/bobette-smith/todos/todos.js</code> in your text editor, and you should see some starter code like this:
-                </p>
-                <pre><code class="javascript">FamousFramework.component('bobette-smith:todos', {
-    // Note that the component's name ^ matches the folder names
-});</code></pre>
-                <p>
-                    With the setup out of the way, let's build a component. (<a href="#build">Click here to skip the longwinded whys and wherefores immediately below &darr;</a>)
-                </p>
             </div>
         </div>
     </div>
