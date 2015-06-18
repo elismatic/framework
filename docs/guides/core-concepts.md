@@ -11,7 +11,8 @@ User interfaces are [state machines](http://en.wikipedia.org/wiki/Finite-state_m
 
 ## Structure and data flow
 
-![best diagram](best.png)
+
+<div style="text-align:center;margin:20px"><img alt="best diagram" src="best.png" style="height:300px;width:300px;"></div>
 
 Data in BEST modules flows in one direction. User actions (e.g. button `'clicks'` ) and programmatic events (page load, etc.) trigger _event_ functions, which mutate the module's internal _state_ (the module's inner "settings"). _Behavior_ functions then respond to these state changes and in turn update the elements in the _tree_. If you think of the _tree_ as analogous to HTML, then behaviors are a lot like CSS, but with functions instead of static values.
 

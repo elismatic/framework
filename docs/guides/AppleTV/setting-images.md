@@ -76,5 +76,5 @@ If you save and refresh it should look like the screenshot below:
 ![images](addimages.png)
 
 <span class="cta">
-[Up next: Positioning images &raquo;](./positioning-images.md)
+[Up next: Positioning images &raquo;](./positioning-images.html)
 </span>

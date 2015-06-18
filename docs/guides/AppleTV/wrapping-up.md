@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Deployment / Publishing
+title: Wrapping up
 ---
 
 Coming soon...

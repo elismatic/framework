@@ -69,5 +69,5 @@ For our animation, we want to rotate our images as if they were dangling from a 
 _Since DOM elements are flat, they become invisible when they are rotated perpendicular to the screen. Note how we didn't quite rotate our `#rotator-node` node above by a full 90 degrees just yet so it would be visible in this example._ 
 
 <span class="cta">
-[Up next: Setting images &raquo;](./setting-images.md)
+[Up next: Setting images &raquo;](./setting-images.html)
 </span>

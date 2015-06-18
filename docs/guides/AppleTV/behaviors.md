@@ -56,6 +56,6 @@ The code above should position 4 nodes randomly within the `#rotator-node`. If y
 In the next section, we will add some stateful values that we can use to drive our behaviors and eventually create our animations. 
 
 <span class="cta">
-[Up next: Adding state &raquo;](./adding-state.md)
+[Up next: Adding state &raquo;](./adding-state.html)
 </span>
 

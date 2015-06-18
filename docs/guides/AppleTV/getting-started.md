@@ -38,6 +38,6 @@ For this lesson, the `apple-tv.js`  file will contain our entire [Framework comp
 Open the project up in your favorite text editor before moving on to the next step. 
 
 <span class="cta">
-[Up next: Structuring an app &raquo;](./structuring-an-app.md)
+[Up next: Structuring an app &raquo;](./structuring-an-app.html)
 </span>
 

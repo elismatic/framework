@@ -37,6 +37,6 @@ We suggest visting the [Hello Framework](HelloFramework.md) section first, and t
 - [Static Assets](static-assets.md)
 - [Timelines](timelines.md)
 
-## [Help &amp; troubleshooting](help-troubleshooting.md) 
+## Help &amp; troubleshooting
 
 If you're stuck, head over to the [Famous Framework Slack channel](https://famous-community.slack.com/messages/framework/).

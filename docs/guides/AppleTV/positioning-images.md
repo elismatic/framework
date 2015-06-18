@@ -57,5 +57,5 @@ We will also update our context size to `window.innerHeight` so it fills the sta
 Great we have everything set up to animate. In the next section, we will add events to modify the state and animate our image nodes. 
 
 <span class="cta">
-[Up next: Creating animations &raquo;](./animations.md)
+[Up next: Creating animations &raquo;](./animations.html)
 </span>

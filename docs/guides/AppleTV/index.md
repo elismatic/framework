@@ -9,7 +9,7 @@ You just binge watched an entire season on Netflix and now your AppleTV is on sn
 
 
 <span class="cta">
-[Up next: Getting started &raquo;](./getting-started.md)
+[Up next: Getting started &raquo;](./getting-started.html)
 </span>
 
 

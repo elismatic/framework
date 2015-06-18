@@ -15,31 +15,6 @@ Architecture of components built in the framework is based on a pattern we call 
 
 We suggest visting the [Hello Framework](HelloFramework.html) section first, and then working your way down the navigation. If you'd like to dive straight into a new Framework project, visit the [getting started](getting-started.html) section. These guides are organized to start at the basics and then gradually increase in complexity as you move along.
 
-## Table of contents
-
-### Overview
-
-- [Hello Framework](hello-framework.html)
-- [Getting Started](getting-started.html)
-- [Core Concepts](core-concepts.html)
-
-### Essentials
-
-- [Behaviors](behaviors.html)
-- [Events](events.html)
-- [States](states.html)
-- [Tree](tree.html)
-- [Layout](layout.html)
-- [Control Flow](control-flow.html)
-
-### Intermediate
-
-- [Deployment / publishing](deployment.html)
-- [Includes](includes.html)
-- [Imports](imports.html)
-- [Static Assets](static-assets.html)
-- [Timelines](timelines.html)
-
-## [Help &amp; troubleshooting](help-troubleshooting.html)
+## Help &amp; troubleshooting
 
 If you're stuck, head over to the [Famous Framework Slack channel](https://famous-community.slack.com/messages/framework/).

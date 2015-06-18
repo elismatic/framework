@@ -39,5 +39,5 @@ You may be wondering why we only include a single `'gallery-item'` in our tree. 
 Let's see how that looks in the next section
 
 <span class="cta">
-[Up next: Behaviors &raquo;](./behaviors.md)
+[Up next: Behaviors &raquo;](./behaviors.html)
 </span>

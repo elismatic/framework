@@ -44,10 +44,15 @@ Absolute size sets the pixel values of a node. `size-absolute-x`, `size-absolute
 
 ### Proportional Size
 
+Coming soon...
+
 ### Differential size
+
+Coming soon... 
 
 ### True size
 
+Coming soon...
 
 
 ## Positioning
@@ -58,8 +63,16 @@ By default, all nodes are positioned to the top left corner of their parent, whi
 
 ## Align
 
+Coming soon...
+
 ## Mount Point
+
+Coming soon...
 
 ## Origin 
 
+Coming soon...
+
 ## Rotation
+
+Coming soon...
