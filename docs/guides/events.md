@@ -31,7 +31,7 @@ The event object selectors specify which event functions will be attached to the
 
 ## Modifying the state
 
-Events, and only events, can modify a module's [state](states.md) values. Via dependency injection, event functions can read and write to these values through the `$state` object.
+Events, and only events, can modify a module's [state](states.html) values. Via dependency injection, event functions can read and write to these values through the `$state` object.
 
     FamousFramework.component('example', {
         events: {
@@ -53,7 +53,7 @@ Here, we use `$state.get()` to grab the state value for `clickCount` and the `.s
 
 It's common to dependency-inject a `$state` instance along with a complementary `$payload` object, which is the message accompanying the source event. In the example above, the `$payload` would be a [MouseEvent](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent) object.
 
-_For more on the `$state` object's API visit the [states section](states.md)._
+_For more on the `$state` object's API visit the [states section](states.html)._
 
 ## Custom events
 

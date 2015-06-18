@@ -3,7 +3,7 @@ layout: default
 title: States
 ---
 
-`states` is an object that carries the arbitrary data (or what you can think of as "settings") of a single component. Since behavior functions listen to changes in states, you can use states to drive animations. States cannot be shared between components, and only a component's [event functions](events.md) can modify state values, via the `$state.set` operation (see below).
+`states` is an object that carries the arbitrary data (or what you can think of as "settings") of a single component. Since behavior functions listen to changes in states, you can use states to drive animations. States cannot be shared between components, and only a component's [event functions](events.html) can modify state values, via the `$state.set` operation (see below).
 
 ## Overview
 

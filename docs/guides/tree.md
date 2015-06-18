@@ -20,7 +20,7 @@ Think of a `<node>` as a container holding all data --sizing, position, DOM Elem
 
 <h2 id="scene-graph">Scene Graph Hierarchy</h2>
 
-When we add `<node>` components to the tree, we are really just building out a representation of the Famous Enigne [scene graph](). The tree gives structure to a project and organizes nodes in a logical heirarchy that will interpret the data we attach ( via behaviors ) and pass information down to "child" nodes. 
+When we add `<node>` components to the tree, we are really just building out a representation of the Famous Enigne [scene graph](http://famous.org/learn/scene-graph.html). The tree gives structure to a project and organizes nodes in a logical heirarchy that will interpret the data we attach ( via behaviors ) and pass information down to "child" nodes. 
 
 Every node in your tree has a parent that it inherits data from. When we nest `<node>` elements in the tree, the outer node becomes the parent and its data, including layout, get passed down to the nested child. 
 
@@ -120,6 +120,6 @@ We can also set HTML content through the `content` behavior. Note when adding el
 
 ## Dynanmic Content
 
- A Framework component's tree is a pure and simple, logic-less template. All control flow statements (`$repeat`, `$yeild`, `$if`) and dynamic data should be added through behaviors. See the [control flow]() section for more info.
+ A Framework component's tree is a pure and simple, logic-less template. All control flow statements (`$repeat`, `$yeild`, `$if`) and dynamic data should be added through behaviors. See the [control flow](control-flow.html) section for more info.
 
 

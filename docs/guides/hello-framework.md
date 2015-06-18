@@ -12,7 +12,7 @@ All FAmous Framework projects begin with the following syntax:
  
     FamousFramework.component('module-name',  { /* module defintion /* });
 
-The bulk of a project lives within the _module definition_, where we list our behaviors, events, states, and tree as members of an object (see [Core Concepts](core-concepts.md) for an intro to the BEST architectural pattern).
+The bulk of a project lives within the _module definition_, where we list our behaviors, events, states, and tree as members of an object (see [Core Concepts](core-concepts.html) for an intro to the BEST architectural pattern).
 
 ## A simple project
 

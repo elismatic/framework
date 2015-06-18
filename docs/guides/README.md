@@ -26,18 +26,17 @@ We suggest visting the [Hello Framework](HelloFramework.md) section first, and t
 - [Events](events.md)
 - [States](states.md)
 - [Tree](tree.md)
-- Layout
-- Control flow
+- [Layout](layout.md)
+- [Control Flow](control-flow.md)
 
 ### Intermediate
 
-- Deployment / publishing
-- Includes
-- Imports
-- Static Assets
-- Sugar
-- Timelines
+- [Deployment / publishing](deployment.md)
+- [Includes](includes.md)
+- [Imports](imports.md)
+- [Static Assets](static-assets.md)
+- [Timelines](timelines.md)
 
-## Help &amp; troubleshooting
+## [Help &amp; troubleshooting](help-troubleshooting.md) 
 
 If you're stuck, head over to the [Famous Framework Slack channel](https://famous-community.slack.com/messages/framework/).

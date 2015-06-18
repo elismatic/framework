@@ -29,7 +29,7 @@ Behavior functions get called every time a state value they are observing gets m
         }
     }
  
-In other words, whenever `clickCount` changes, `#foo`'s position function will fire. For a deeper look at behaviors, see the [behaviors section](behaviors.md). 
+In other words, whenever `clickCount` changes, `#foo`'s position function will fire. For a deeper look at behaviors, see the [behaviors section](behaviors.html). 
 
 ### Events
 
@@ -45,7 +45,7 @@ It's up to the developer to define how the state mutation occurs within an event
         }
     }
 
-Notice how we dependency inject the `$state` object to access the state value `clickCount`. For more on events, visit the [events section](events.md).
+Notice how we dependency inject the `$state` object to access the state value `clickCount`. For more on events, visit the [events section](events.html).
 
 ### States
 
@@ -55,7 +55,7 @@ States are the _arbitrary (and JSON-serializable) values_ encapsulated by a modu
         clickCount: 0
     }
 
-Check out the [states section](states.md) for more detail.
+Check out the [states section](states.html) for more detail.
 
 ### Tree
 
@@ -68,7 +68,7 @@ Trees structure an application's elements in an ordered heirarchy. They are a _d
     `
 Unlike the other modules facets (behaviors, events, states), the tree is not provided as an object, but instead as a string. Above we use ES6 [multi-line strings](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings) with the backtick (`&#96;`) to define our tree (we can also do this by file reference or through a simple string). 
 
-Visit the [trees section](tree.md) for a deeper look. 
+Visit the [trees section](tree.html) for a deeper look. 
 
 ### Components
 
