@@ -3,7 +3,7 @@ layout: default
 title: Control Flow
 ---
 
-The Famous Framework currently supports three basic control-flow operations: $if, $repeat, and $yield. Unlike other template-based frameworks, the Famous Framework doesn't support programming these kinds of operations inside the structural declaration of your component (i.e. in the tree). Instead, control flow must be implemented as [behaviors](behaviors.html).
+The Famous Framework currently supports three basic control-flow operations: `$if`, `$repeat`, and `$yield`. Unlike other template-based frameworks, the Famous Framework doesn't support programming these kinds of operations inside the structural declaration of your component (i.e. in the tree). Instead, control flow must be implemented as [behaviors](behaviors.html).
 
 ## $if
 
@@ -35,24 +35,40 @@ The `$if` control-flow behavior is a special behavior that will add/remove selec
 
 The `$repeat` control-flow behavior will repeat the selected components a certain number of times, where the number of times reflects the `.length` of the array returned from the function. For example, the following example repeats a `node` three times:
 
-    BEST.scene('zelda.zulu:repeat', 'HEAD', {
-        tree: `<node id="el"></node>`,
-        behaviors: {
-            '#el': {
-                '$repeat': function() {
-                    return [
-                        {position:[0,0],content:'Hello'},
-                        {position:[50,50],content:'Howdy'},
-                        {position:[100,100],content:'Ahoy'}
-                    ];
+       FamousFramework.component('zelda.zulu:repeat', 'HEAD', {
+            tree: `<node id="el"></node>`,
+            behaviors: {
+                '#el': {
+                    '$repeat': function() {
+                        return [
+                            {position:[0,0],content:'Hello'},
+                            {position:[50,50],content:'Howdy'},
+                            {position:[100,100],content:'Ahoy'}
+                        ];
+                    }
                 }
             }
-        }
-    });
+        });
 
 If objects are given as the array elements returned by the `$repeat` behavior, the properties of those objects will be sent as event messages to each repeated component as it is initialized.
 
 Injecting `$index` into a behavior function, allows you to access the index of an item in the `$repeat` array and it also notifies the framework to call that behavior function for each item in the `$repeat` array. 
+
+     FamousFramework.component('zelda.zulu:repeat', 'HEAD', {
+            tree: `<node id="el"></node>`,
+            behaviors: {
+                '#el': {
+                    '$repeat': function() {
+                        return ['red', 'yellow', 'blue', 'green'];
+                    },
+                    style: function($index){
+
+                    }
+
+                }
+            }
+        });
+
 
 ## $yield
 
@@ -60,7 +76,7 @@ The `$yield` control-flow behavior allows a component define the conditions unde
 
     // zelda.zulu/yield/yield.js
     // This scene allows content to "punch through"
-    BEST.scene('zelda.zulu:yield', 'HEAD', {
+   FamousFramework.component('zelda.zulu:yield', 'HEAD', {
         tree: `
             <view id="main"></view>
             <view id="sidebar"></view>
@@ -77,7 +93,7 @@ The `$yield` control-flow behavior allows a component define the conditions unde
 
     // someone/else/else.js
     // This scene uses of zelda.zulu:yield's $yield behavior
-    BEST.scene('someone:else', 'HEAD', {
+   FamousFramework.component('someone:else', 'HEAD', {
         tree: `
             <zelda.zulu:yield>
                 <node id="main-content"></node>
