@@ -118,7 +118,7 @@
                 <p>
                     When the user types some text into the input field and hits the 'Enter' key, a todo item will be added to the list. Minus some CSS that we've omitted for brevity's sake, this is the complete code:
                 </p>
-                <pre><code class="javascript">FamousFramework.scene('jane-doe:todos', {
+                <pre><code class="javascript">FamousFramework.scene('famous-demos:simplified-todos', {
     behaviors: {
         '#list': {
             'inner-html': function(todos) {
@@ -130,8 +130,8 @@
     },
     events: {
         '#input': {
-            'change': function($state, $payload) {
-                $state.set('todos', $state.get('todos').concat($payload.value));
+            'famous:events:change': function($state, $event) {
+                $state.set('todos', $state.get('todos').concat($event.value));
             }
         }
     },
