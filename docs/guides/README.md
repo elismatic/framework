@@ -10,7 +10,7 @@ Architecture of components built in the framework is based on a pattern we call 
 
 ## Start learning
 
-We suggest visting the [Hello Framework](HelloFramework.md) section first, and then working your way down the navigation. If you'd like to dive straight into a new Framework project, visit the [getting started](getting-started.md) section. These guides are organized to start at the basics and then gradually increase in complexity as you move along.
+We suggest visting the [Hello Framework](hello-framework.md) section first, and then working your way down the navigation. If you'd like to dive straight into a new Framework project, visit the [getting started](getting-started.md) section. These guides are organized to start at the basics and then gradually increase in complexity as you move along.
 
 ## Table of contents
 
